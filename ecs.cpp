@@ -166,18 +166,20 @@ void init_ecs(Camera2D *camera)
 
             float angle = physicsBody->body->orient;
             // find closest enemy
-            float closestDistance = 1000000000;
+            /*
+            float closestDistance = 0;
             for (auto ent : theFuckingList2) {
               auto position = ent.get<Position>();
               float distance = Vector2Distance(physicsBody->body->position, Vector2({position->x,position->y}));
               if (distance < closestDistance) {
                 closestDistance = distance;
+                Vector2 diff = Vector2Subtract(Vector2({position->x,position->y}), physicsBody->body->position);
                 angle = Vector2Angle(
-                      physicsBody->body->position,
-                      Vector2({position->x,position->y})
-                );
+                      (Vector2) { 1.0f, 0.0f },
+                      diff);
               }
             }
+            */
             bullet.set([physicsBody,shooter,angle](Velocity &velocity) {
               Vector2 unit = {1,0};
               Vector2 force = Vector2Rotate(unit, angle);
@@ -372,14 +374,14 @@ void init_ecs(Camera2D *camera)
     triangle.color = ORANGE;
     triangle.size = 1.0f;
     shooter.cooldown = 0.1f;
-    shooter.cooldown_max = 0.1f;
+    shooter.cooldown_max = 0.5f;
     shooter.speed = 5.0f;
     shooter.lifetime = 1.0f;
   });
 
   auto wave = ecs.entity();
   wave.set([player](FighterWave &f) {
-    f.numFighters = 10;
+    f.numFighters = 4;
     f.time = 1.0f;
     f.nextCooldown = 4.8f;
     f.player = player;
@@ -403,7 +405,7 @@ void init_ecs(Camera2D *camera)
   */
 
   // chmmrs
-  int numChmmr = 2;
+  int numChmmr = 1;
   float distChmmr = 100.0f;
   for (int i = 0; i < numChmmr; i++) {
     float angle = (float)i / (float)numChmmr * 2.0f * PI;
