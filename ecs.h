@@ -15,7 +15,7 @@ struct Velocity {
 };
 
 struct Follower {
-  //ecs::entity follow;
+  flecs::entity follow;
 };
 
 struct Shooter {

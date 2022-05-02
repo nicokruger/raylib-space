@@ -10,6 +10,27 @@ void init_ecs(Camera2D *camera)
       p.x += v.x;
       p.y += v.y;
     });
+ ecs.system<const Follower, Velocity, Position>()
+    .each([](const Follower &f, Velocity &v, Position &p) {
+        auto flecsEntity = ecs.entity(f.follow);
+        auto followPosition = flecsEntity.get<Position>();
+
+        Vector2 vToFollow = Vector2Subtract(
+            (Vector2) { followPosition->x, followPosition->y },
+            (Vector2) { p.x, p.y }
+        );
+        Vector2 maxVel = Vector2Scale(Vector2Normalize(vToFollow),2.0f);
+        //float angle = Vector2Angle(
+            //(Vector2) { 1.0f, 0.0f },
+            //Vector2Normalize(maxVel)
+        //);
+
+        v.x = maxVel.x;
+        v.y = maxVel.y;
+        //p->rotation = angle;
+
+    });
+
  ecs.system<PhysicsBodyComponent, const Velocity>()
     .each([](PhysicsBodyComponent& p, const Velocity& v) {
       p.body->force = (Vector2){v.x,v.y};
@@ -119,7 +140,6 @@ void init_ecs(Camera2D *camera)
     .iter([](flecs::iter &iter, Shooter *shooter, const PhysicsBodyComponent *physicsBody) {
         shooter->cooldown -= iter.delta_system_time();
         if (shooter->cooldown < 0) {
-          std::cout << "shoot" << std::endl;
           shooter->cooldown = shooter->cooldown_max + shooter->cooldown;
 
           auto bullet = iter.world().entity();
@@ -128,8 +148,16 @@ void init_ecs(Camera2D *camera)
               Vector2 unit = {1,0};
             Vector2 force = Vector2Rotate(unit, physicsBody->body->orient);
             Vector2 maxVel = Vector2Scale(Vector2Normalize(force),shooter->speed);
+            maxVel.x += physicsBody->body->velocity.x;
+            maxVel.y += physicsBody->body->velocity.y;
             velocity.x = maxVel.x;
             velocity.y = maxVel.y;
+          });
+
+          bullet.set([shooter](Shot &shot) {
+              shot.speed = shooter->speed;
+              shot.lifetime = shooter->lifetime;
+              shot.length = 1.0f;
           });
 
           bullet.set([](sTriangle& t) {
@@ -143,8 +171,19 @@ void init_ecs(Camera2D *camera)
           });
 
         }
-        
+
      });
+  ecs.system<Shot>()
+    .iter([](flecs::iter &iter, Shot *shot) {
+      auto const dt = ecs.delta_time();
+      for (auto i : iter) {
+        shot[i].lifetime -= dt;
+        if (shot[i].lifetime < 0) {
+          std::cout << "delete shot" << std::endl;
+          iter.entity(i).destruct();
+        }
+      }
+    });
 
 
 
@@ -153,29 +192,6 @@ void init_ecs(Camera2D *camera)
       p = {10, 20};
       v = {1, 2};
     });
-  auto bullet = ecs.entity();
-  bullet.set([](Shot& s) {
-    s.x = 0;
-    s.y = 0;
-    s.length = 10;
-    s.angle = 0;
-    s.speed = 10;
-    s.lifetime = 0;
-  });
-  bullet.set([](Position& p) {
-    p.x = 0;
-    p.y = 0;
-  });
-  //bullet.set([](Velocity& v) {
-    //v.x = 0;
-    //v.y = -5;
-  //});
-  bullet.set([](sTriangle& r) {
-      r.color = GREEN;
-  });
-  bullet.set([](PhysicsBodyComponent& p) {
-    p.density = 99;
-  });
 
   auto player = ecs.entity();
   player.set([](Position& p, PhysicsBodyComponent& physics, PlayerControl &playerControl, sTriangle &triangle, CameraFollow &cameraFollow, Shooter &shooter) {
@@ -191,9 +207,24 @@ void init_ecs(Camera2D *camera)
     triangle.size = 1.0f;
     shooter.cooldown = 1.0f;
     shooter.cooldown_max = 0.1f;
-    shooter.speed = 20.0f;
-    shooter.lifetime = 5.0f;
+    shooter.speed = 8.0f;
+    shooter.lifetime = 0.5f;
   });
+
+  int num = 5;
+  float dist = 100.0f;
+  for (int i = 0; i < num; i++) {
+    float angle = (float)i / (float)num * 2.0f * PI;
+    auto fighter = ecs.entity();
+    fighter.set([player,angle,dist](Position& p, Velocity& v, sTriangle& t, Follower &follow) {
+      p = {600 + cos(angle) * dist, sin(angle) * dist+100};
+      v = {0, 0};
+      t.color = RED;
+      t.size = 0.5f;
+
+      follow.follow = player;
+    });
+  }
 
 
 }
