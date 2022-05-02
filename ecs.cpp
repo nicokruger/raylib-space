@@ -374,6 +374,7 @@ HudInfo *init_ecs(Camera2D *camera)
           // increase score
           PlayerControl newPlayerControl = *playerEntity.get<PlayerControl>();
           newPlayerControl.score += 1 * (newPlayerControl.scoreMultiplier);
+          playerEntity.mut(entity.world()).set<PlayerControl>(newPlayerControl);
         }
       }
 
