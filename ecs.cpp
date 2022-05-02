@@ -8,7 +8,10 @@ std::vector<flecs::entity> theFuckingList;
 std::vector<flecs::entity> theFuckingList2;
 flecs::entity playerEntity;
 HudInfo hudInfo;
+int numChmmr = 1;
+float distChmmr = 100.0f;
 
+void create_chmmr(const flecs::world &world);
 HudInfo *init_ecs(Camera2D *camera)
 {
   // lol shitty pre frame hack
@@ -20,6 +23,17 @@ HudInfo *init_ecs(Camera2D *camera)
     .each([](flecs::entity entity, Position &position) {
       theFuckingList.push_back(entity);
       theFuckingList2.push_back(entity);
+    });
+
+  ecs.system<UpgradeChmmr>()
+    .iter([] (flecs::iter iter, UpgradeChmmr *upgradeChmmr) {
+        for (auto i : iter) {
+        iter.entity(i).remove<UpgradeChmmr>();
+        }
+        numChmmr++;
+        iter.world().delete_with<Chmmr>();
+        create_chmmr(iter.world());
+
     });
 
  ecs.system<Position, const Velocity>()
@@ -315,6 +329,8 @@ HudInfo *init_ecs(Camera2D *camera)
 
                     hudInfo.upgrades[2].name = "CHMMR SPD";
                     hudInfo.upgrades[2].execute = [](flecs::entity player) {
+                      std::cout << "chmmr speed" << std::endl;
+                      player.set<UpgradeChmmr>({0});
                     };
                     hudInfo.upgrades[3].name = "CHMMR CNT";
                     hudInfo.upgrades[3].execute = [](flecs::entity player) {
@@ -598,26 +614,28 @@ void setup_scene()
   */
 
   // chmmrs
-  int numChmmr = 1;
-  float distChmmr = 100.0f;
+  create_chmmr(ecs);
+}
+
+void create_chmmr(const flecs::world &world)
+{
   for (int i = 0; i < numChmmr; i++) {
     float angle = (float)i / (float)numChmmr * 2.0f * PI;
-    auto chmmr = ecs.entity();
-    chmmr.set([player,angle,distChmmr](Position& p, sCircle &c, Chmmr &chmmr) {
+    auto chmmr = world.entity();
+    chmmr.set([angle](Position& p, sCircle &c, Chmmr &chmmr) {
       p = {600 + cos(angle) * distChmmr, sin(angle) * distChmmr+100};
       c.color = ORANGE;
 
       c.size = 20.0f;
       chmmr.size = 20.0f;
 
-      chmmr.parent = player;
+      chmmr.parent = playerEntity;
       chmmr.radius = distChmmr;
       chmmr.angle = angle;
       chmmr.rotateSpeed = 3.14f / 3.0f;
     });
  }
 }
-
 void reset_ecs()
 {
   ecs.delete_with<Position>();

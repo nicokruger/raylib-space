@@ -13,6 +13,10 @@
 #define GUI_STATE_GAMEOVER 2
 #define GUI_STATE_UPGRADE 3
 
+struct UpgradeChmmr {
+  int type;
+};
+
 struct Upgrade {
   std::string name;
   std::string description;
