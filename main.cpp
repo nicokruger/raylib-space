@@ -24,7 +24,7 @@
 #include "ecs.h"
 #include "button.h"
 
-#define MAX_BUILDINGS   500
+#define MAX_BUILDINGS   1
 #define FORCE          4.0f
 #define MAX_FORCE     10.0f
 #define MAX_VEL     0.1f
@@ -32,6 +32,12 @@
 
 #define SHIP_WIDTH 20
 #define SHIP_LENGTH 40
+
+#if defined(PLATFORM_DESKTOP)
+    #define GLSL_VERSION            330
+#else   // PLATFORM_RPI, PLATFORM_ANDROID, PLATFORM_WEB
+    #define GLSL_VERSION            100
+#endif
 
 int main(void)
 {
@@ -44,6 +50,35 @@ int main(void)
 
     InitPhysics();
 
+    // Load texture texture to apply shaders
+    Texture2D texture = LoadTexture("resources/space.png");
+
+    // Load shader and setup location points and values
+    Shader shader = LoadShader(0, TextFormat("resources/shaders/glsl%i/wave.fs", GLSL_VERSION));
+    int secondsLoc = GetShaderLocation(shader, "secondes");
+    int freqXLoc = GetShaderLocation(shader, "freqX");
+    int freqYLoc = GetShaderLocation(shader, "freqY");
+    int ampXLoc = GetShaderLocation(shader, "ampX");
+    int ampYLoc = GetShaderLocation(shader, "ampY");
+    int speedXLoc = GetShaderLocation(shader, "speedX");
+    int speedYLoc = GetShaderLocation(shader, "speedY");
+
+    // Shader uniform values that can be updated at any time
+    float freqX = 25.0f;
+    float freqY = 25.0f;
+    float ampX = 5.0f;
+    float ampY = 5.0f;
+    float speedX = 8.0f;
+    float speedY = 8.0f;
+
+    float screenSize[2] = { (float)GetScreenWidth(), (float)GetScreenHeight() };
+    SetShaderValue(shader, GetShaderLocation(shader, "size"), &screenSize, SHADER_UNIFORM_VEC2);
+    SetShaderValue(shader, freqXLoc, &freqX, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shader, freqYLoc, &freqY, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shader, ampXLoc, &ampX, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shader, ampYLoc, &ampY, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shader, speedXLoc, &speedX, SHADER_UNIFORM_FLOAT);
+    SetShaderValue(shader, speedYLoc, &speedY, SHADER_UNIFORM_FLOAT);
 
 
     Rectangle player = { 400, 280, 40, 40 };
@@ -72,6 +107,7 @@ int main(void)
 
     HudInfo *hudInfo = init_ecs(&camera);
 
+    float seconds = 0.0f;
     SetTargetFPS(60);                   // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
 
@@ -103,10 +139,20 @@ int main(void)
           BeginDrawing();
 
               ClearBackground(RAYWHITE);
+              seconds += GetFrameTime();
+
+              SetShaderValue(shader, secondsLoc, &seconds, SHADER_UNIFORM_FLOAT);
 
               BeginMode2D(camera);
 
                   DrawRectangle(-6000, 320, 13000, 8000, DARKGRAY);
+              BeginShaderMode(shader);
+
+                DrawTexture(texture, 0, 0, WHITE);
+                DrawTexture(texture, texture.width, 0, WHITE);
+
+              EndShaderMode();
+
 
                   for (int i = 0; i < MAX_BUILDINGS; i++) DrawRectangleRec(buildings[i], buildColors[i]);
 
@@ -226,6 +272,9 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
+    //
+    UnloadShader(shader);         // Unload shader
+    UnloadTexture(texture);       // Unload texture
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
 
