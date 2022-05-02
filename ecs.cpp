@@ -299,21 +299,26 @@ HudInfo *init_ecs(Camera2D *camera)
                       std::cout << "upgrade SHOT CD" << std::endl;
                       Shooter shooter = *playerEntity.get<Shooter>();
                       //auto bullet = iter.world().entity();
-                      shooter.cooldown_max *= 0.5f;
+                      shooter.cooldown_max *= 0.75f;
                       player.set<Shooter>(shooter);
                     };
 
                     hudInfo.upgrades[1].name = "SHOT SPD";
                     hudInfo.upgrades[1].execute = [](flecs::entity player) {
                       std::cout << "upgrade SHOT SPD" << std::endl;
+                      Shooter shooter = *playerEntity.get<Shooter>();
                       //auto bullet = iter.world().entity();
-                      //shooter.speed *= 0.5f;
-                      //player.set<Shooter>(shooter);
+                      shooter.speed *= 1.5f;
+                      player.set<Shooter>(shooter);
 
                     };
 
                     hudInfo.upgrades[2].name = "CHMMR SPD";
+                    hudInfo.upgrades[2].execute = [](flecs::entity player) {
+                    };
                     hudInfo.upgrades[3].name = "CHMMR CNT";
+                    hudInfo.upgrades[3].execute = [](flecs::entity player) {
+                    };
                   }
                   iter.world().defer([iter,newPlayerControl]() {
                     playerEntity.mut(iter).set<PlayerControl>(newPlayerControl);

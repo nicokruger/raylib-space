@@ -50,9 +50,7 @@ int main(void)
     Rectangle buildings[MAX_BUILDINGS] = { 0 };
     Color buildColors[MAX_BUILDINGS] = { 0 };
 
-    PhysicsBody playerBody = CreatePhysicsBodyRectangle((Vector2){screenWidth / 2.0f, screenHeight / 2.0f}, 54, 40, 1.0f);
     int spacing = 0;
-    playerBody->useGravity = false;
 
     for (int i = 0; i < MAX_BUILDINGS; i++)
     {
@@ -83,8 +81,6 @@ int main(void)
         // Update
         //----------------------------------------------------------------------------------
 
-        UpdatePhysics();
-
         // Camera zoom controls
         camera.zoom += ((float)GetMouseWheelMove()*0.05f);
 
@@ -99,6 +95,7 @@ int main(void)
         }
 
         if (hudInfo->state == GUI_STATE_PLAYING) {
+          UpdatePhysics();
           //----------------------------------------------------------------------------------
 
           // Draw
