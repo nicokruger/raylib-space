@@ -3,8 +3,9 @@
 #include "ecs.h"
 
 flecs::world ecs;
-  std::vector<flecs::entity> theFuckingList;
-  std::vector<flecs::entity> theFuckingList2;
+std::vector<flecs::entity> theFuckingList;
+std::vector<flecs::entity> theFuckingList2;
+flecs::entity playerEntity;
 
 void init_ecs(Camera2D *camera)
 {
@@ -13,6 +14,7 @@ void init_ecs(Camera2D *camera)
     .term<PlayerControl>().oper(flecs::Not)
     .term<Shot>().oper(flecs::Not)
     .term<Chmmr>().oper(flecs::Not)
+    .term<GravityWell>().oper(flecs::Not)
     .each([](flecs::entity entity, Position &position) {
       theFuckingList.push_back(entity);
       theFuckingList2.push_back(entity);
@@ -23,6 +25,7 @@ void init_ecs(Camera2D *camera)
       p.x += v.x;
       p.y += v.y;
     });
+ /*
  ecs.system<const Follower, Velocity, Position>()
     .each([](const Follower &f, Velocity &v, Position &p) {
         auto flecsEntity = ecs.entity(f.follow);
@@ -43,6 +46,7 @@ void init_ecs(Camera2D *camera)
         //p->rotation = angle;
 
     });
+    */
 
  ecs.system<PhysicsBodyComponent, const Velocity>()
     .each([](PhysicsBodyComponent& p, const Velocity& v) {
@@ -325,6 +329,56 @@ void init_ecs(Camera2D *camera)
         }
     });
 
+  // draw a circle
+  ecs.system<const Position,const GravityWell,const sCircle>()
+    .each([](flecs::entity entity, const Position &p, const GravityWell &gw, const sCircle &circle) {
+        DrawCircle(p.x, p.y, gw.size, circle.color);
+    });
+
+  // apply a force from the gravity well to the player
+  ecs.system<const Position,GravityWell>()
+    .each([](flecs::entity entity, const Position &p, const GravityWell &gw) {
+        for (auto ent : theFuckingList2) {
+          float dist = sqrt(pow(p.x - ent.get<Position>()->x,2) + pow(p.y - ent.get<Position>()->y,2));
+
+          // work out affect on the entity
+          float force = (gw.size * gw.density) / (dist * dist);
+
+          // work out the angle
+          float angle = atan2(p.y - ent.get<Position>()->y, p.x - ent.get<Position>()->x);
+
+          // add the force to the velocity
+          auto velocity = ent.get<Velocity>();
+          if (velocity == nullptr) {
+            continue;
+          }
+          ent.set<Velocity>({velocity->x + cos(angle) * force, velocity->y + sin(angle) * force});
+          ent.modified<Velocity>();
+
+        }
+    });
+
+  ecs.system<const Position,GravityWell>()
+    .each([](flecs::entity entity, const Position &p, const GravityWell &gw) {
+        auto ent = playerEntity;
+        float dist = sqrt(pow(p.x - ent.get<Position>()->x,2) + pow(p.y - ent.get<Position>()->y,2));
+
+        // work out affect on the entity
+        float force = (gw.size * gw.density) / (dist * dist);
+
+        // work out the angle
+        float angle = atan2(p.y - ent.get<Position>()->y, p.x - ent.get<Position>()->x);
+
+        // add the force to the velocity
+        Vector2 newForce = {
+          cos(angle) * force,
+          sin(angle) * force
+        };
+        PhysicsAddForce(playerEntity.get<PhysicsBodyComponent>()->body, newForce);
+
+    });
+
+
   // hack post-frame
   ecs.system<PlayerControl>()
     .each([](PlayerControl &c) {
@@ -361,11 +415,17 @@ void init_ecs(Camera2D *camera)
     */
 
 
+  auto planet1 = ecs.entity();
+  planet1.set<Position>({0,0});
+  planet1.set<GravityWell>({100,100});
+  planet1.set<sCircle>({BLUE,100});
+
   auto player = ecs.entity();
+  playerEntity = player;
   player.set([](Position& p, PhysicsBodyComponent& physics, PlayerControl &playerControl, sTriangle &triangle, CameraFollow &cameraFollow, Shooter &shooter) {
     p = {200, 200};
     cameraFollow = {20,20};
-    physics.density = 1.0f;
+    physics.density = 0.2f;
     physics.size = 1.0f;
     playerControl.force = 4.0f;
     playerControl.turn = 0.1f;

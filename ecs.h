@@ -86,6 +86,11 @@ struct FighterWave {
   flecs::entity player;
 };
 
+struct GravityWell {
+  float density;
+  float size;
+};
+
 void init_ecs(Camera2D *camera);
 
 void run_ecs();
