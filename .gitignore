@@ -106,3 +106,4 @@ docgen_tmp/
 parser/raylib_parser
 
 my_project
+Makefile
