@@ -189,6 +189,7 @@ int main(void)
           if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE) || IsGestureDetected(GESTURE_TAP)) {
             hudInfo->state = GUI_STATE_PLAYING;
             hudInfo->health = hudInfo->maxHealth;
+            InitPhysics();
             reset_ecs();
             setup_scene();
           }

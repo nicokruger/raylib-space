@@ -77,13 +77,21 @@ HudInfo *init_ecs(Camera2D *camera)
     .each([](const sRectangle &r, const Position& p) {
       DrawRectangle(p.x,p.y, 50, 50, GREEN);
     });
-  ecs.observer<PhysicsBodyComponent,Position>()
+  ecs.observer<PhysicsBodyComponent,Position,const sTriangle>()
     .event(flecs::OnSet)
-    .each([](flecs::entity e, PhysicsBodyComponent& p, Position &pp) {
+    .each([](flecs::entity e, PhysicsBodyComponent& p, Position &pp, const sTriangle &triangle) {
         const Position *posi = e.get<Position>();
-        std::cout << "set physics: " << p.density << std::endl;
+        std::cout << "create physics: " << p.density << std::endl;
         std::cout << "pp " << pp.x << " " << pp.y << std::endl;
         p.body = CreatePhysicsBodyRectangle((Vector2){ pp.x, pp.y }, 40 * p.size, 40 * p.size, p.density);
+        p.body->useGravity = false;
+    });
+  ecs.observer<PhysicsBodyComponent,const Position,const GravityWell,const sCircle>()
+    .event(flecs::OnSet)
+    .each([](flecs::entity e, PhysicsBodyComponent& p, const Position &pp, const GravityWell &well, const sCircle &circle) {
+        const Position *posi = e.get<Position>();
+        std::cout << "set physics (circle): " << p.density << std::endl;
+        p.body = CreatePhysicsBodyCircle((Vector2){ pp.x, pp.y }, 60, p.density);
         p.body->useGravity = false;
     });
 
@@ -429,7 +437,7 @@ HudInfo *init_ecs(Camera2D *camera)
         DrawCircle(p.x, p.y, gw.size, circle.color);
     });
 
-  // apply a force from the gravity well to the player
+  // apply a force from the gravity well to the enemies
   ecs.system<const Position,GravityWell>()
     .each([](flecs::entity entity, const Position &p, const GravityWell &gw) {
         for (auto ent : theFuckingList2) {
@@ -458,12 +466,13 @@ HudInfo *init_ecs(Camera2D *camera)
         }
     });
 
+  // apply a force from the gravity well to the player
   ecs.system<const Position,GravityWell>()
     .each([](flecs::entity entity, const Position &p, const GravityWell &gw) {
         auto ent = playerEntity;
         float dist = sqrt(pow(p.x - ent.get<Position>()->x,2) + pow(p.y - ent.get<Position>()->y,2));
-        if (dist < 50.0f) {
-        dist = 50.0f;
+        if (dist < 120.0f) {
+          dist = 120.0f;
         }
 
         // work out affect on the entity
@@ -552,7 +561,7 @@ void setup_scene()
   }
   */
   int numCols = 10;
-  for (int i = 0; i < 20; i++) {
+  for (int i = 0; i < 6; i++) {
     auto planet = ecs.entity();
     //space evenly across
     float x = (float)i / (float)numCols * 5000.0f - 2500.0f;
@@ -561,6 +570,7 @@ void setup_scene()
     planet.set<Position>({x,y});
     planet.set<GravityWell>({100,100});
     planet.set<sCircle>({BLUE,100});
+    planet.set<PhysicsBodyComponent>({100000.0f,40.0f});
   }
   /*
   auto planet1 = ecs.entity();
