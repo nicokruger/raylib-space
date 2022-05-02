@@ -5,9 +5,15 @@
 #include "raymath.h"
 #endif
 
+#define GUI_STATE_PLAYING 0
+#define GUI_STATE_MENU 1
+#define GUI_STATE_GAMEOVER 2
+#define GUI_STATE_UPGRADE 3
+
 struct HudInfo {
   float health;
   float maxHealth;
+  int state;
 };
 
 struct Position {
@@ -103,3 +109,5 @@ struct GravityWell {
 struct HudInfo *init_ecs(Camera2D *camera);
 
 void run_ecs();
+void setup_scene();
+void reset_ecs();

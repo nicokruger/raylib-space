@@ -2,7 +2,8 @@
 #include <vector>
 #include "ecs.h"
 
-flecs::world ecs;
+flecs::world *currentEcs = new flecs::world();
+flecs::world &ecs = *currentEcs;
 std::vector<flecs::entity> theFuckingList;
 std::vector<flecs::entity> theFuckingList2;
 flecs::entity playerEntity;
@@ -134,17 +135,20 @@ HudInfo *init_ecs(Camera2D *camera)
           Vector2 maxVel = Vector2Scale(Vector2Normalize(playerBody->velocity),playerControl.maxVel);
           playerBody->velocity = maxVel;
         }
+        /*
         if (Vector2Length(playerBody->force) > playerControl.maxFore)
         {
-          printf("SCALE");
           Vector2 force = Vector2Normalize(playerBody->force);
           force = Vector2Scale(force, playerControl.maxFore);
           PhysicsAddForce(playerBody, force);
         }
+        */
 
         if (IsKeyDown(KEY_A))
         {
           playerBody->orient -= playerControl.turn;
+          // playerBody->orient = fmod(playerBody->orient, 2 * PI);
+          // clamp to closest 16th of a circle
           //PhysicsAddTorque(playerBody, -5000.0f);
         }
         else if (IsKeyDown(KEY_D))
@@ -161,6 +165,7 @@ HudInfo *init_ecs(Camera2D *camera)
             ent.destruct();
             if (playerControl.health <= 0) {
               playerControl.health = 0;
+              hudInfo.state = GUI_STATE_GAMEOVER;
             }
           }
         }
@@ -383,6 +388,9 @@ HudInfo *init_ecs(Camera2D *camera)
     .each([](flecs::entity entity, const Position &p, const GravityWell &gw) {
         auto ent = playerEntity;
         float dist = sqrt(pow(p.x - ent.get<Position>()->x,2) + pow(p.y - ent.get<Position>()->y,2));
+        if (dist < 50.0f) {
+        dist = 50.0f;
+        }
 
         // work out affect on the entity
         float force = (gw.size * gw.density) / (dist * dist);
@@ -392,9 +400,17 @@ HudInfo *init_ecs(Camera2D *camera)
 
         // add the force to the velocity
         Vector2 newForce = {
-          cos(angle) * force,
-          sin(angle) * force
+          cos(angle) * force * 3,
+          sin(angle) * force * 3
         };
+
+        /*
+        float maxForce = 2.0f;
+        if (Vector2Length(newForce) > maxForce) {
+          newForce = Vector2Scale(Vector2Normalize(newForce), maxForce);
+        }
+        */
+
         PhysicsAddForce(playerEntity.get<PhysicsBodyComponent>()->body, newForce);
 
     });
@@ -435,7 +451,13 @@ HudInfo *init_ecs(Camera2D *camera)
     });
     */
 
+  setup_scene();
 
+  return &hudInfo;
+}
+
+void setup_scene()
+{
   auto planet1 = ecs.entity();
   planet1.set<Position>({0,0});
   planet1.set<GravityWell>({100,100});
@@ -453,7 +475,7 @@ HudInfo *init_ecs(Camera2D *camera)
     cameraFollow = {20,20};
     physics.density = 0.2f;
     physics.size = 1.0f;
-    playerControl.force = 4.0f;
+    playerControl.force = 2.4f;
     playerControl.turn = 0.1f;
     playerControl.maxVel = 0.1f;
     playerControl.maxFore = 10.0f;
@@ -469,7 +491,7 @@ HudInfo *init_ecs(Camera2D *camera)
 
   auto wave = ecs.entity();
   wave.set([player](FighterWave &f) {
-    f.numFighters = 2;
+    f.numFighters = 20;
     f.time = 1.0f;
     f.nextCooldown = 7.0f;
     f.player = player;
@@ -510,10 +532,15 @@ HudInfo *init_ecs(Camera2D *camera)
       chmmr.angle = angle;
       chmmr.rotateSpeed = 3.14f / 3.0f;
     });
-  }
-
-  return &hudInfo;
+ }
 }
+
+void reset_ecs()
+{
+  ecs.delete_with<Position>();
+  ecs.delete_with<FighterWave>();
+}
+
 
 void run_ecs()
 {

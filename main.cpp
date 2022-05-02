@@ -83,77 +83,6 @@ int main(void)
 
         UpdatePhysics();
 
-        // Player movement
-        if (IsKeyDown(KEY_RIGHT)) player.x += 2;
-        else if (IsKeyDown(KEY_LEFT)) player.x -= 2;
-
-        // Get physics body position
-        Vector2 p = playerBody->position;
-        player.x = p.x;
-        player.y = p.y;
-        float orientation = playerBody->orient;
-        float lineStartX = player.x + 40;
-        float lineStartY = player.y + 40;
-        float lineEndX = (float)cos(orientation) * 50.0f;
-        float lineEndY = (float)sin(orientation) * 50.0f;
-
-        char buf[255];
-        snprintf(buf, sizeof(buf), "SPD %.2f ROT %.2f", Vector2Length(playerBody->velocity), orientation);
-
-
-        if (IsKeyDown(KEY_W))
-        {
-          float orientation = playerBody->orient;
-          Vector2 force = { cos(orientation) * FORCE, sin(orientation) * FORCE };
-          PhysicsAddForce(playerBody, force);
-
-        }
-        else if (IsKeyDown(KEY_S))
-        {
-          float orientation = playerBody->orient;
-          Vector2 force = { cos(orientation) * -FORCE, sin(orientation) * -FORCE };
-          PhysicsAddForce(playerBody, force);
-        }
-
-        if (Vector2Length(playerBody->velocity) > MAX_VEL)
-        {
-          Vector2 maxVel = Vector2Scale(Vector2Normalize(playerBody->velocity),MAX_VEL);
-          playerBody->velocity = maxVel;
-        }
-        if (Vector2Length(playerBody->force) > MAX_FORCE)
-        {
-          printf("SCALE");
-          Vector2 force = Vector2Normalize(playerBody->force);
-          force = Vector2Scale(force, MAX_FORCE);
-          PhysicsAddForce(playerBody, force);
-        }
-
-        if (IsKeyDown(KEY_A))
-        {
-          playerBody->orient -= TURN;
-          //PhysicsAddTorque(playerBody, -5000.0f);
-        }
-        else if (IsKeyDown(KEY_D))
-        {
-          playerBody->orient += TURN;
-          //PhysicsAddTorque(playerBody, 5000.0f);
-        }
-        
-        //if (IsKeyDown(KEY_S)) player.y -= 2;
-        // Camera target follows player
-        //camera.target = (Vector2){ player.x + 20, player.y + 20 };
-
-        // Camera rotation controls
-        //if (IsKeyDown(KEY_A)) camera.rotation--;
-        //else if (IsKeyDown(KEY_S)) camera.rotation++;
-
-
-        //camera.rotation = RAD2DEG*playerBody->orient;
-
-        // Limit camera rotation to 80 degrees (-40 to 40)
-        //if (camera.rotation > 40) camera.rotation = 40;
-        //else if (camera.rotation < -40) camera.rotation = -40;
-
         // Camera zoom controls
         camera.zoom += ((float)GetMouseWheelMove()*0.05f);
 
@@ -166,85 +95,99 @@ int main(void)
             camera.zoom = 1.0f;
             camera.rotation = 0.0f;
         }
-        //----------------------------------------------------------------------------------
 
-        // Draw
-        //----------------------------------------------------------------------------------
-        BeginDrawing();
+        if (hudInfo->state == GUI_STATE_PLAYING) {
+          //----------------------------------------------------------------------------------
 
-            ClearBackground(RAYWHITE);
+          // Draw
+          //----------------------------------------------------------------------------------
+          BeginDrawing();
 
-            BeginMode2D(camera);
+              ClearBackground(RAYWHITE);
 
-                DrawRectangle(-6000, 320, 13000, 8000, DARKGRAY);
+              BeginMode2D(camera);
 
-                for (int i = 0; i < MAX_BUILDINGS; i++) DrawRectangleRec(buildings[i], buildColors[i]);
+                  DrawRectangle(-6000, 320, 13000, 8000, DARKGRAY);
 
-
-
-                //DrawRectangleRec(player, RED);
-
-                DrawLine((int)camera.target.x, -screenHeight*10, (int)camera.target.x, screenHeight*10, GREEN);
-                DrawLine(-screenWidth*10, (int)camera.target.y, screenWidth*10, (int)camera.target.y, GREEN);
-                run_ecs();
-
-            EndMode2D();
+                  for (int i = 0; i < MAX_BUILDINGS; i++) DrawRectangleRec(buildings[i], buildColors[i]);
 
 
-            DrawText("SCREEN AREA", 640, 10, 20, RED);
-            DrawText(buf, 640, 40, 20, RED);
-            DrawLine((int)lineStartX, (int)lineStartY, (int)(lineStartY + lineEndX), (int)(lineStartY + lineEndY), GREEN);
 
-            DrawRectangle(0, 0, screenWidth, 5, RED);
-            DrawRectangle(0, 5, 5, screenHeight - 10, RED);
-            DrawRectangle(screenWidth - 5, 5, 5, screenHeight - 10, RED);
-            DrawRectangle(0, screenHeight - 5, screenWidth, 5, RED);
+                  //DrawRectangleRec(player, RED);
 
-            DrawRectangle( 10, 10, 250, 113, Fade(SKYBLUE, 0.5f));
-            DrawRectangleLines( 10, 10, 250, 113, BLUE);
+                  DrawLine((int)camera.target.x, -screenHeight*10, (int)camera.target.x, screenHeight*10, GREEN);
+                  DrawLine(-screenWidth*10, (int)camera.target.y, screenWidth*10, (int)camera.target.y, GREEN);
+                  run_ecs();
 
-            char buf2[255];
-            snprintf(buf2, sizeof(buf2), "Health %.2f/%.2f", hudInfo->health, hudInfo->maxHealth);
+              EndMode2D();
 
-            DrawText(buf2, 20, 20, 10, BLACK);
-            DrawText("- Right/Left to move Offset", 40, 40, 10, DARKGRAY);
-            DrawText("- Mouse Wheel to Zoom in-out", 40, 60, 10, DARKGRAY);
-            DrawText("- A / S to Rotate", 40, 80, 10, DARKGRAY);
-            DrawText("- R to reset Zoom and Rotation", 40, 100, 10, DARKGRAY);
 
-            BeginMode2D(camera);
-            /*
-                Vector2 v1, v2, v3;
-                float playerAngle = playerBody->orient;
-                v1 = Vector2Rotate((Vector2){
-                  40.0f,
-                  0.0f
-                }, playerAngle);
-                v2 = Vector2Rotate((Vector2){
-                  - 40.0f,
-                  - 40.0f,
-                  //0,0
-                }, playerAngle);
-                v3 = Vector2Rotate((Vector2){
-                  -40.0f,
-                  40.0f
-                  //500,500
-                }, playerAngle);
-                DrawTriangle(
-                    (Vector2){
-                    v1.x + player.x,
-                    v1.y + player.y},
-                    (Vector2){v2.x + player.x,
-                    v2.y + player.y},
-                    (Vector2){v3.x + player.x,
-                    v3.y + player.y},
-                    RED);
-                DrawTriangle(v1, v2, v3, GREEN);
-                */
-            EndMode2D();
+              DrawText("SCREEN AREA", 640, 10, 20, RED);
 
-        EndDrawing();
-        //----------------------------------------------------------------------------------
+              DrawRectangle(0, 0, screenWidth, 5, RED);
+              DrawRectangle(0, 5, 5, screenHeight - 10, RED);
+              DrawRectangle(screenWidth - 5, 5, 5, screenHeight - 10, RED);
+              DrawRectangle(0, screenHeight - 5, screenWidth, 5, RED);
+
+              DrawRectangle( 10, 10, 250, 113, Fade(SKYBLUE, 0.5f));
+              DrawRectangleLines( 10, 10, 250, 113, BLUE);
+
+              char buf2[255];
+              snprintf(buf2, sizeof(buf2), "Health %.2f/%.2f", hudInfo->health, hudInfo->maxHealth);
+
+              DrawText(buf2, 20, 20, 10, BLACK);
+              DrawText("- Right/Left to move Offset", 40, 40, 10, DARKGRAY);
+              DrawText("- Mouse Wheel to Zoom in-out", 40, 60, 10, DARKGRAY);
+              DrawText("- A / S to Rotate", 40, 80, 10, DARKGRAY);
+              DrawText("- R to reset Zoom and Rotation", 40, 100, 10, DARKGRAY);
+
+              BeginMode2D(camera);
+              /*
+                  Vector2 v1, v2, v3;
+                  float playerAngle = playerBody->orient;
+                  v1 = Vector2Rotate((Vector2){
+                    40.0f,
+                    0.0f
+                  }, playerAngle);
+                  v2 = Vector2Rotate((Vector2){
+                    - 40.0f,
+                    - 40.0f,
+                    //0,0
+                  }, playerAngle);
+                  v3 = Vector2Rotate((Vector2){
+                    -40.0f,
+                    40.0f
+                    //500,500
+                  }, playerAngle);
+                  DrawTriangle(
+                      (Vector2){
+                      v1.x + player.x,
+                      v1.y + player.y},
+                      (Vector2){v2.x + player.x,
+                      v2.y + player.y},
+                      (Vector2){v3.x + player.x,
+                      v3.y + player.y},
+                      RED);
+                  DrawTriangle(v1, v2, v3, GREEN);
+                  */
+              EndMode2D();
+
+          EndDrawing();
+          //----------------------------------------------------------------------------------
+        } else if (hudInfo->state == GUI_STATE_GAMEOVER) {
+          BeginDrawing();
+          ClearBackground(RAYWHITE);
+          DrawText("GAME OVER", screenWidth/2 - 100, screenHeight/2 - 50, 50, RED);
+          EndDrawing();
+          
+          if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE) || IsGestureDetected(GESTURE_TAP)) {
+            hudInfo->state = GUI_STATE_PLAYING;
+            hudInfo->health = hudInfo->maxHealth;
+            reset_ecs();
+            setup_scene();
+          }
+
+        }
     }
 
     // De-Initialization
