@@ -1,7 +1,9 @@
 #include <iostream>
+#include <vector>
 #include "ecs.h"
 
 flecs::world ecs;
+  std::vector<flecs::entity> theFuckingList;
 
 void init_ecs(Camera2D *camera)
 {
@@ -142,32 +144,36 @@ void init_ecs(Camera2D *camera)
         if (shooter->cooldown < 0) {
           shooter->cooldown = shooter->cooldown_max + shooter->cooldown;
 
-          auto bullet = iter.world().entity();
+          iter.world().defer([&iter, &shooter, &physicsBody]() {
+            std::cout << "create bullet" << std::endl;
+            auto bullet = iter.world().entity();
 
-          bullet.set([physicsBody,shooter](Velocity &velocity) {
-              Vector2 unit = {1,0};
-            Vector2 force = Vector2Rotate(unit, physicsBody->body->orient);
-            Vector2 maxVel = Vector2Scale(Vector2Normalize(force),shooter->speed);
-            maxVel.x += physicsBody->body->velocity.x;
-            maxVel.y += physicsBody->body->velocity.y;
-            velocity.x = maxVel.x;
-            velocity.y = maxVel.y;
-          });
+            bullet.set([physicsBody,shooter](Velocity &velocity) {
+                Vector2 unit = {1,0};
+              Vector2 force = Vector2Rotate(unit, physicsBody->body->orient);
+              Vector2 maxVel = Vector2Scale(Vector2Normalize(force),shooter->speed);
+              maxVel.x += physicsBody->body->velocity.x;
+              maxVel.y += physicsBody->body->velocity.y;
+              velocity.x = maxVel.x;
+              velocity.y = maxVel.y;
+            });
 
-          bullet.set([shooter](Shot &shot) {
-              shot.speed = shooter->speed;
-              shot.lifetime = shooter->lifetime;
-              shot.length = 1.0f;
-          });
+            bullet.set([shooter](Shot &shot) {
+                shot.speed = shooter->speed;
+                shot.lifetime = shooter->lifetime;
+                shot.length = 20;
+            });
 
-          bullet.set([](sTriangle& t) {
-              t.color = BLUE;
-              t.size = 0.2f;
-          });
-          bullet.set([physicsBody](Position &pos)  {
-              pos.x = physicsBody->body->position.x;
-              pos.y = physicsBody->body->position.y;
-              pos.rotation = physicsBody->body->orient;
+            bullet.set([](sTriangle& t) {
+                t.color = BLUE;
+                t.size = 0.2f;
+            });
+            bullet.set([physicsBody](Position &pos)  {
+                pos.x = physicsBody->body->position.x;
+                pos.y = physicsBody->body->position.y;
+                pos.rotation = physicsBody->body->orient;
+            });
+            
           });
 
         }
@@ -179,10 +185,87 @@ void init_ecs(Camera2D *camera)
       for (auto i : iter) {
         shot[i].lifetime -= dt;
         if (shot[i].lifetime < 0) {
-          std::cout << "delete shot" << std::endl;
-          iter.entity(i).destruct();
+          auto ent = iter.entity(i);
+          ent.destruct();
+        } else {
         }
       }
+    });
+
+  ecs.system<Position>()
+    .term<PlayerControl>().oper(flecs::Not)
+    .term<Shot>().oper(flecs::Not)
+    .each([](flecs::entity entity, Position &position) {
+      theFuckingList.push_back(entity);
+    });
+  ecs.system<Shot,Position,sTriangle>()
+    .iter([](flecs::iter &iter, Shot *shotList, const Position *mePosList, sTriangle *triangleList) {
+        for (auto i :iter) {
+          auto me = iter.entity(i);
+          auto shot = shotList[i];
+          auto mePos = mePosList[i];
+          auto meTriangle = triangleList[i];
+          for (auto other : theFuckingList) {
+                if (other == me) continue;
+                auto otherPos = other.get<Position>();
+                auto dx = fabs(mePos.x - otherPos->x);
+                auto dy = fabs(mePos.y - otherPos->y);
+
+                if (dx < shot.length && dy < shot.length) {
+                  other.destruct();
+
+                  std::cout << "shot length1" << shot.length << std::endl;
+                  shot.length -= 10.0f;
+                  std::cout << "shot length2" << shot.length << std::endl;
+                  if (shot.length <= 0) {
+                    me.destruct();
+                  }
+                  meTriangle.size *= 0.5f;
+                  meTriangle.color = BLACK;
+                  me.set<sTriangle>(meTriangle);
+                  me.modified<sTriangle>();
+                  me.modified<Shot>();
+                  //std::cout << "hit" << std::endl;
+                  //iterr.entity(i).set<Dying>({0});
+                  //iterr.entity(i).add_if
+                }
+          }
+        }
+
+        theFuckingList.clear();
+        std::vector<flecs::entity> toDie;
+        for (auto i :iter) {
+          auto me = iter.entity(i);
+          auto shot = shotList[i];
+          auto mePos = mePosList[i];
+          //iter.world().defer([&allPositionsQuery,&toDie,shot,me,mePos]() {
+          /*
+          allPositionsQuery.iter( [&toDie,shot,me,mePos](flecs::iter &iterr, const Position *otherPosList) {
+
+              for (auto i : iterr)
+              {
+                flecs::entity other = iterr.entity(i);
+              }
+          //});
+              });
+              */
+        }
+
+
+        //ecs.defer([&toDie]() {
+            //std::cout << "defer stuff lols" << std::endl;
+          //for (auto ent : toDie) {
+            //std::cout << "delete shot " << ent << std::endl;
+            //ent.destruct();
+            //std::cout << "deleted shot" << std::endl;
+          //}
+        //});
+        //ecs.defer_begin();
+        //for (auto die : toDie) {
+          //die.destruct();
+          //die.add<Dying>();
+        //}
+        //ecs.defer_end();
     });
 
 
@@ -205,10 +288,10 @@ void init_ecs(Camera2D *camera)
     playerControl.maxFore = 10.0f;
     triangle.color = ORANGE;
     triangle.size = 1.0f;
-    shooter.cooldown = 1.0f;
+    shooter.cooldown = 0.1f;
     shooter.cooldown_max = 0.1f;
-    shooter.speed = 8.0f;
-    shooter.lifetime = 0.5f;
+    shooter.speed = 5.0f;
+    shooter.lifetime = 0.3f;
   });
 
   int num = 5;
@@ -231,5 +314,13 @@ void init_ecs(Camera2D *camera)
 
 void run_ecs()
 {
-  ecs.progress(0);
+  ecs.set_automerge(true);
+  //ecs.frame_begin();
+  //ecs.staging_begin();
+  //ecs.defer_begin();
+  ecs.progress();
+  //ecs.staging_end();
+  //ecs.frame_end();
+  //ecs.merge();
+  //ecs.defer_end();
 }

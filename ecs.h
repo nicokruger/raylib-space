@@ -10,6 +10,10 @@ struct Position {
   float rotation;
 };
 
+struct Dying {
+  float time;
+};
+
 struct Velocity {
   float x, y;
 };
@@ -31,11 +35,24 @@ struct Shot {
   float speed;
   float lifetime;
 };
+
+struct Chmmr {
+  float radius;
+  float rotateSpeed;
+  float hp;
+  flecs::entity parent;
+}
+
 struct sRectangle {
   int color;
 };
 
 struct sTriangle {
+  Color color;
+  float size;
+};
+
+struct sCircle {
   Color color;
   float size;
 };
