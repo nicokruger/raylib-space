@@ -503,10 +503,42 @@ HudInfo *init_ecs(Camera2D *camera)
 
 void setup_scene()
 {
+  int numPlanets = 100;
+  /*
+  for (int i = 0; i < numPlanets; i++) {
+    auto planet = ecs.entity();
+    planet.set<Position>({
+      (float)rand() / (float)RAND_MAX * 5000.0f - 2500.0f,
+      (float)rand() / (float)RAND_MAX * 5000.0f - 2500.0f
+      });
+    float size = (float)rand() / (float)RAND_MAX * 200.0f + 30.f;
+    planet.set<GravityWell>({
+      (float)rand() / (float)RAND_MAX * 200.0f + 30.f,
+      size
+    });
+    planet.set<sCircle>({
+      BLUE,
+      size
+    });
+  }
+  */
+  int numCols = 10;
+  for (int i = 0; i < 20; i++) {
+    auto planet = ecs.entity();
+    //space evenly across
+    float x = (float)i / (float)numCols * 5000.0f - 2500.0f;
+    // odd / even rows
+    float y = (i % 2 == 0) ? -300.0f : 300.0f;
+    planet.set<Position>({x,y});
+    planet.set<GravityWell>({100,100});
+    planet.set<sCircle>({BLUE,100});
+  }
+  /*
   auto planet1 = ecs.entity();
   planet1.set<Position>({0,0});
   planet1.set<GravityWell>({100,100});
   planet1.set<sCircle>({BLUE,100});
+  */
 
   //auto planet2 = ecs.entity();
   //planet2.set<Position>({400,400});
