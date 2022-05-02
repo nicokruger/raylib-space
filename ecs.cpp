@@ -142,6 +142,7 @@ void init_ecs(Camera2D *camera)
   ecs.system<const CameraFollow, const PhysicsBodyComponent>()
     .each([camera](const CameraFollow &cameraFollow, const PhysicsBodyComponent &physics) {
       camera->target = physics.body->position;
+      //camera->rotation = -3.14/2.0f +RAD2DEG*physics.body->orient;
     });
 
   ecs.system<Shooter, const PhysicsBodyComponent>()
@@ -151,7 +152,6 @@ void init_ecs(Camera2D *camera)
           shooter->cooldown = shooter->cooldown_max + shooter->cooldown;
 
           iter.world().defer([&iter, &shooter, &physicsBody]() {
-            std::cout << "create bullet" << std::endl;
             auto bullet = iter.world().entity();
 
             bullet.set([physicsBody,shooter](Velocity &velocity) {
@@ -185,6 +185,7 @@ void init_ecs(Camera2D *camera)
         }
 
      });
+
   ecs.system<Shot>()
     .iter([](flecs::iter &iter, Shot *shot) {
       auto const dt = ecs.delta_time();
@@ -239,41 +240,6 @@ void init_ecs(Camera2D *camera)
                 }
           }
         }
-
-        theFuckingList.clear();
-        std::vector<flecs::entity> toDie;
-        for (auto i :iter) {
-          auto me = iter.entity(i);
-          auto shot = shotList[i];
-          auto mePos = mePosList[i];
-          //iter.world().defer([&allPositionsQuery,&toDie,shot,me,mePos]() {
-          /*
-          allPositionsQuery.iter( [&toDie,shot,me,mePos](flecs::iter &iterr, const Position *otherPosList) {
-
-              for (auto i : iterr)
-              {
-                flecs::entity other = iterr.entity(i);
-              }
-          //});
-              });
-              */
-        }
-
-
-        //ecs.defer([&toDie]() {
-            //std::cout << "defer stuff lols" << std::endl;
-          //for (auto ent : toDie) {
-            //std::cout << "delete shot " << ent << std::endl;
-            //ent.destruct();
-            //std::cout << "deleted shot" << std::endl;
-          //}
-        //});
-        //ecs.defer_begin();
-        //for (auto die : toDie) {
-          //die.destruct();
-          //die.add<Dying>();
-        //}
-        //ecs.defer_end();
     });
 
   ecs.system<Position,Chmmr>()
@@ -297,7 +263,6 @@ void init_ecs(Camera2D *camera)
           other.destruct();
         }
       }
-      theFuckingList2.clear();
 
     });
 
@@ -314,7 +279,7 @@ void init_ecs(Camera2D *camera)
               auto playerPos = player.get<Position>();
               std::cout << "create wave" << std::endl;
               int num = wave.numFighters;
-              float dist = 300.0f;
+              float dist = 500.0f;
 
               for (int i = 0; i < num; i++) {
               float angle = (float)i / (float)num * 2.0f * PI;
@@ -342,13 +307,14 @@ void init_ecs(Camera2D *camera)
         }
     });
 
+  // hack post-frame
+  ecs.system<PlayerControl>()
+    .each([](PlayerControl &c) {
+        theFuckingList.clear();
+        theFuckingList2.clear();
+      });
 
 
-  auto entity1 = ecs.entity()
-    .set([](Position& p, Velocity& v) {
-      p = {10, 20};
-      v = {1, 2};
-    });
 
   auto player = ecs.entity();
   player.set([](Position& p, PhysicsBodyComponent& physics, PlayerControl &playerControl, sTriangle &triangle, CameraFollow &cameraFollow, Shooter &shooter) {
@@ -365,13 +331,13 @@ void init_ecs(Camera2D *camera)
     shooter.cooldown = 0.1f;
     shooter.cooldown_max = 0.1f;
     shooter.speed = 5.0f;
-    shooter.lifetime = 0.3f;
+    shooter.lifetime = 1.0f;
   });
 
   auto wave = ecs.entity();
   wave.set([player](FighterWave &f) {
-    f.numFighters = 4;
-    f.time = 5.0f;
+    f.numFighters = 10;
+    f.time = 1.0f;
     f.nextCooldown = 4.8f;
     f.player = player;
   });
@@ -394,7 +360,7 @@ void init_ecs(Camera2D *camera)
   */
 
   // chmmrs
-  int numChmmr = 16;
+  int numChmmr = 2;
   float distChmmr = 100.0f;
   for (int i = 0; i < numChmmr; i++) {
     float angle = (float)i / (float)numChmmr * 2.0f * PI;
@@ -409,7 +375,7 @@ void init_ecs(Camera2D *camera)
       chmmr.parent = player;
       chmmr.radius = distChmmr;
       chmmr.angle = angle;
-      chmmr.rotateSpeed = 3.14f;
+      chmmr.rotateSpeed = 3.14f / 3.0f;
     });
   }
 

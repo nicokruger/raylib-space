@@ -210,6 +210,7 @@ int main(void)
             DrawText("- R to reset Zoom and Rotation", 40, 100, 10, DARKGRAY);
 
             BeginMode2D(camera);
+            /*
                 Vector2 v1, v2, v3;
                 float playerAngle = playerBody->orient;
                 v1 = Vector2Rotate((Vector2){
@@ -236,6 +237,7 @@ int main(void)
                     v3.y + player.y},
                     RED);
                 DrawTriangle(v1, v2, v3, GREEN);
+                */
             EndMode2D();
 
         EndDrawing();
