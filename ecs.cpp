@@ -25,9 +25,8 @@ void init_ecs(Camera2D *camera)
       p.x += v.x;
       p.y += v.y;
     });
- /*
- ecs.system<const Follower, Velocity, Position>()
-    .each([](const Follower &f, Velocity &v, Position &p) {
+ ecs.system<const Follower, Velocity, const Position>()
+    .each([](const Follower &f, Velocity &v, const Position &p) {
         auto flecsEntity = ecs.entity(f.follow);
         auto followPosition = flecsEntity.get<Position>();
 
@@ -46,7 +45,6 @@ void init_ecs(Camera2D *camera)
         //p->rotation = angle;
 
     });
-    */
 
  ecs.system<PhysicsBodyComponent, const Velocity>()
     .each([](PhysicsBodyComponent& p, const Velocity& v) {
@@ -352,7 +350,13 @@ void init_ecs(Camera2D *camera)
           if (velocity == nullptr) {
             continue;
           }
-          ent.set<Velocity>({velocity->x + cos(angle) * force, velocity->y + sin(angle) * force});
+          //std::cout << "velocity " << velocity->x << " " << velocity->y << std::endl;
+          Velocity newVelocity = {
+            velocity->x + cos(angle) * force * 5,
+            velocity->y + sin(angle) * force * 5
+          };
+          ent.set<Velocity>(newVelocity);
+          //std::cout << "velocity after " << newVelocity.x << " " << newVelocity.y << std::endl;
           ent.modified<Velocity>();
 
         }
@@ -419,6 +423,11 @@ void init_ecs(Camera2D *camera)
   planet1.set<Position>({0,0});
   planet1.set<GravityWell>({100,100});
   planet1.set<sCircle>({BLUE,100});
+
+  auto planet2 = ecs.entity();
+  planet2.set<Position>({400,400});
+  planet2.set<GravityWell>({100,100});
+  planet2.set<sCircle>({BLUE,100});
 
   auto player = ecs.entity();
   playerEntity = player;
