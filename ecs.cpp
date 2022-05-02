@@ -10,6 +10,7 @@ flecs::entity playerEntity;
 HudInfo hudInfo;
 int numChmmr = 1;
 float distChmmr = 100.0f;
+float chmmrSpeed = 3.14f / 3.0f;
 
 void create_chmmr(const flecs::world &world);
 HudInfo *init_ecs(Camera2D *camera)
@@ -28,11 +29,17 @@ HudInfo *init_ecs(Camera2D *camera)
   ecs.system<UpgradeChmmr>()
     .iter([] (flecs::iter iter, UpgradeChmmr *upgradeChmmr) {
         for (auto i : iter) {
-        iter.entity(i).remove<UpgradeChmmr>();
+          iter.entity(i).remove<UpgradeChmmr>();
         }
-        numChmmr++;
         iter.world().delete_with<Chmmr>();
-        create_chmmr(iter.world());
+
+        if (upgradeChmmr[0].type == 1) {
+          numChmmr++;
+          create_chmmr(iter.world());
+        } else {
+          chmmrSpeed *= 1.3f;
+          create_chmmr(iter.world());
+        }
 
     });
 
@@ -329,11 +336,11 @@ HudInfo *init_ecs(Camera2D *camera)
 
                     hudInfo.upgrades[2].name = "CHMMR SPD";
                     hudInfo.upgrades[2].execute = [](flecs::entity player) {
-                      std::cout << "chmmr speed" << std::endl;
                       player.set<UpgradeChmmr>({0});
                     };
                     hudInfo.upgrades[3].name = "CHMMR CNT";
                     hudInfo.upgrades[3].execute = [](flecs::entity player) {
+                      player.set<UpgradeChmmr>({1});
                     };
                   }
                   iter.world().defer([iter,newPlayerControl]() {
@@ -364,6 +371,9 @@ HudInfo *init_ecs(Camera2D *camera)
         auto dist = sqrt(pow(pos.x - otherPos->x,2) + pow(pos.y - otherPos->y,2));
         if (dist < chmmr.size + 40) {
           other.destruct();
+          // increase score
+          PlayerControl newPlayerControl = *playerEntity.get<PlayerControl>();
+          newPlayerControl.score += 1 * (newPlayerControl.scoreMultiplier);
         }
       }
 
@@ -632,7 +642,7 @@ void create_chmmr(const flecs::world &world)
       chmmr.parent = playerEntity;
       chmmr.radius = distChmmr;
       chmmr.angle = angle;
-      chmmr.rotateSpeed = 3.14f / 3.0f;
+      chmmr.rotateSpeed = chmmrSpeed;
     });
  }
 }
