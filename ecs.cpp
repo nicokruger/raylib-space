@@ -8,6 +8,16 @@ flecs::world ecs;
 
 void init_ecs(Camera2D *camera)
 {
+  // lol shitty pre frame hack
+  ecs.system<Position>()
+    .term<PlayerControl>().oper(flecs::Not)
+    .term<Shot>().oper(flecs::Not)
+    .term<Chmmr>().oper(flecs::Not)
+    .each([](flecs::entity entity, Position &position) {
+      theFuckingList.push_back(entity);
+      theFuckingList2.push_back(entity);
+    });
+
  ecs.system<Position, const Velocity>()
     .each([](Position& p, const Velocity& v) {
       p.x += v.x;
@@ -154,9 +164,23 @@ void init_ecs(Camera2D *camera)
           iter.world().defer([&iter, &shooter, &physicsBody]() {
             auto bullet = iter.world().entity();
 
-            bullet.set([physicsBody,shooter](Velocity &velocity) {
-                Vector2 unit = {1,0};
-              Vector2 force = Vector2Rotate(unit, physicsBody->body->orient);
+            float angle = physicsBody->body->orient;
+            // find closest enemy
+            float closestDistance = 1000000000;
+            for (auto ent : theFuckingList2) {
+              auto position = ent.get<Position>();
+              float distance = Vector2Distance(physicsBody->body->position, Vector2({position->x,position->y}));
+              if (distance < closestDistance) {
+                closestDistance = distance;
+                angle = Vector2Angle(
+                      physicsBody->body->position,
+                      Vector2({position->x,position->y})
+                );
+              }
+            }
+            bullet.set([physicsBody,shooter,angle](Velocity &velocity) {
+              Vector2 unit = {1,0};
+              Vector2 force = Vector2Rotate(unit, angle);
               Vector2 maxVel = Vector2Scale(Vector2Normalize(force),shooter->speed);
               maxVel.x += physicsBody->body->velocity.x;
               maxVel.y += physicsBody->body->velocity.y;
@@ -174,10 +198,10 @@ void init_ecs(Camera2D *camera)
                 t.color = BLUE;
                 t.size = 0.2f;
             });
-            bullet.set([physicsBody](Position &pos)  {
+            bullet.set([physicsBody,angle](Position &pos)  {
                 pos.x = physicsBody->body->position.x;
                 pos.y = physicsBody->body->position.y;
-                pos.rotation = physicsBody->body->orient;
+                pos.rotation = angle;
             });
             
           });
@@ -199,14 +223,6 @@ void init_ecs(Camera2D *camera)
       }
     });
 
-  ecs.system<Position>()
-    .term<PlayerControl>().oper(flecs::Not)
-    .term<Shot>().oper(flecs::Not)
-    .term<Chmmr>().oper(flecs::Not)
-    .each([](flecs::entity entity, Position &position) {
-      theFuckingList.push_back(entity);
-      theFuckingList2.push_back(entity);
-    });
   ecs.system<Shot,Position,sTriangle>()
     .iter([](flecs::iter &iter, Shot *shotList, const Position *mePosList, sTriangle *triangleList) {
         for (auto i :iter) {
@@ -314,6 +330,33 @@ void init_ecs(Camera2D *camera)
         theFuckingList2.clear();
       });
 
+  /*
+  ecs.system<PhysicsBodyComponent &>()
+    .each([](PhysicsBodyComponent &physics) {
+        auto pos = physics.body->position;
+        // wrap around solar system -100 to 100
+        if (pos.x < -100) {
+          pos.x = 100;
+        std::cout << "WRAP! " << std::endl;
+        PhysicsShatter(physics.body, (Vector2){0,0}, 100.0f);
+        }
+        if (pos.x > 100) {
+          pos.x = -100;
+        std::cout << "WRAP! " << std::endl;
+        PhysicsShatter(physics.body, (Vector2){0,0}, 100.0f);
+        }
+        if (pos.y < -100) {
+          pos.y = 100;
+        std::cout << "WRAP! " << std::endl;
+        PhysicsShatter(physics.body, (Vector2){0,0}, 100.0f);
+        }
+        if (pos.y > 100) {
+          pos.y = -100;
+        std::cout << "WRAP! " << std::endl;
+        PhysicsShatter(physics.body, (Vector2){0,0}, 100.0f);
+        }
+    });
+    */
 
 
   auto player = ecs.entity();
