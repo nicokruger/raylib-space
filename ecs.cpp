@@ -5,6 +5,11 @@ flecs::world ecs;
 
 void init_ecs(Camera2D *camera)
 {
+ ecs.system<Position, const Velocity>()
+    .each([](Position& p, const Velocity& v) {
+      p.x += v.x;
+      p.y += v.y;
+    });
  ecs.system<PhysicsBodyComponent, const Velocity>()
     .each([](PhysicsBodyComponent& p, const Velocity& v) {
       p.body->force = (Vector2){v.x,v.y};
@@ -27,13 +32,13 @@ void init_ecs(Camera2D *camera)
     .each([](const PhysicsBodyComponent &pc, Position& p) {
         p.x = pc.body->position.x;
         p.y = pc.body->position.y;
+        p.rotation = pc.body->orient;
     });
 
-  ecs.system<const PhysicsBodyComponent, const sTriangle>()
-    .each([](const PhysicsBodyComponent &bodyComponent, const sTriangle &triangle) {
-      auto body = bodyComponent.body;
+  ecs.system<const Position, const sTriangle>()
+    .each([](const Position &position, const sTriangle &triangle) {
       Vector2 v1, v2, v3;
-      float playerAngle = body->orient;
+      float playerAngle = position.rotation;
       v1 = Vector2Rotate((Vector2){
         40.0f * triangle.size,
         0.0f
@@ -50,12 +55,12 @@ void init_ecs(Camera2D *camera)
       }, playerAngle);
       DrawTriangle(
           (Vector2){
-          v1.x + body->position.x,
-          v1.y + body->position.y},
-          (Vector2){v2.x + body->position.x,
-          v2.y + body->position.y},
-          (Vector2){v3.x + body->position.x,
-          v3.y + body->position.y},
+          v1.x + position.x,
+          v1.y + position.y},
+          (Vector2){v2.x + position.x,
+          v2.y + position.y},
+          (Vector2){v3.x + position.x,
+          v3.y + position.y},
           triangle.color);
       DrawTriangle(v1, v2, v3, triangle.color);
 
@@ -118,10 +123,6 @@ void init_ecs(Camera2D *camera)
           shooter->cooldown = shooter->cooldown_max + shooter->cooldown;
 
           auto bullet = iter.world().entity();
-          bullet.set([physicsBody](Position& p) {
-            p.x = physicsBody->body->position.x;
-            p.y = physicsBody->body->position.y;
-          });
 
           bullet.set([physicsBody,shooter](Velocity &velocity) {
               Vector2 unit = {1,0};
@@ -137,7 +138,8 @@ void init_ecs(Camera2D *camera)
           });
           bullet.set([physicsBody](Position &pos)  {
               pos.x = physicsBody->body->position.x;
-              pos.x = physicsBody->body->position.x;
+              pos.y = physicsBody->body->position.y;
+              pos.rotation = physicsBody->body->orient;
           });
 
         }
@@ -188,7 +190,7 @@ void init_ecs(Camera2D *camera)
     triangle.color = ORANGE;
     triangle.size = 1.0f;
     shooter.cooldown = 1.0f;
-    shooter.cooldown_max = 1.0f;
+    shooter.cooldown_max = 0.1f;
     shooter.speed = 20.0f;
     shooter.lifetime = 5.0f;
   });

@@ -7,10 +7,15 @@
 
 struct Position {
   float x, y;
+  float rotation;
 };
 
 struct Velocity {
   float x, y;
+};
+
+struct Follower {
+  //ecs::entity follow;
 };
 
 struct Shooter {
