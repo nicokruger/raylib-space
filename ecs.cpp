@@ -4,6 +4,7 @@
 
 flecs::world ecs;
   std::vector<flecs::entity> theFuckingList;
+  std::vector<flecs::entity> theFuckingList2;
 
 void init_ecs(Camera2D *camera)
 {
@@ -85,9 +86,13 @@ void init_ecs(Camera2D *camera)
           (Vector2){v3.x + position.x,
           v3.y + position.y},
           triangle.color);
-      DrawTriangle(v1, v2, v3, triangle.color);
 
     });
+  ecs.system<const Position, const sCircle>()
+    .each([](const Position &position, const sCircle &circle) {
+      DrawCircle(position.x, position.y, circle.size, circle.color);
+    });
+
 
   ecs.system<const PhysicsBodyComponent, const PlayerControl>()
     .each([](const PhysicsBodyComponent &bodyComponent, const PlayerControl &playerControl) {
@@ -138,6 +143,7 @@ void init_ecs(Camera2D *camera)
     .each([camera](const CameraFollow &cameraFollow, const PhysicsBodyComponent &physics) {
       camera->target = physics.body->position;
     });
+
   ecs.system<Shooter, const PhysicsBodyComponent>()
     .iter([](flecs::iter &iter, Shooter *shooter, const PhysicsBodyComponent *physicsBody) {
         shooter->cooldown -= iter.delta_system_time();
@@ -195,8 +201,10 @@ void init_ecs(Camera2D *camera)
   ecs.system<Position>()
     .term<PlayerControl>().oper(flecs::Not)
     .term<Shot>().oper(flecs::Not)
+    .term<Chmmr>().oper(flecs::Not)
     .each([](flecs::entity entity, Position &position) {
       theFuckingList.push_back(entity);
+      theFuckingList2.push_back(entity);
     });
   ecs.system<Shot,Position,sTriangle>()
     .iter([](flecs::iter &iter, Shot *shotList, const Position *mePosList, sTriangle *triangleList) {
@@ -268,6 +276,72 @@ void init_ecs(Camera2D *camera)
         //ecs.defer_end();
     });
 
+  ecs.system<Position,Chmmr>()
+    .each([](flecs::entity entity, Position &pos, Chmmr &chmmr) {
+      auto flecsEntity = ecs.entity(chmmr.parent);
+      auto parentPos = flecsEntity.get<Position>();
+      //std::cout << "parentPos " << parentPos->x << " " << parentPos->y << std::endl;
+
+      chmmr.angle += chmmr.rotateSpeed * ecs.delta_time();
+      pos.x = parentPos->x + cos(chmmr.angle) * chmmr.radius;
+      pos.y = parentPos->y + sin(chmmr.angle) * chmmr.radius;
+      //std::cout << "position " << pos.x << " " << pos.y << std::endl;
+
+      entity.set<Chmmr>(chmmr);
+      entity.set<Position>(pos);
+
+      for (auto other : theFuckingList2) {
+        auto otherPos = other.get<Position>();
+        auto dist = sqrt(pow(pos.x - otherPos->x,2) + pow(pos.y - otherPos->y,2));
+        if (dist < chmmr.size + 40) {
+          other.destruct();
+        }
+      }
+      theFuckingList2.clear();
+
+    });
+
+  ecs.system<FighterWave>()
+    .iter([](flecs::iter &iter, FighterWave *waveList) {
+
+        for (auto i : iter) {
+          auto wave = waveList[i];
+          wave.time -= ecs.delta_time();
+          auto player = wave.player;
+
+          if (wave.time < 0) {
+            iter.world().defer([&]() {
+              auto playerPos = player.get<Position>();
+              std::cout << "create wave" << std::endl;
+              int num = wave.numFighters;
+              float dist = 300.0f;
+
+              for (int i = 0; i < num; i++) {
+              float angle = (float)i / (float)num * 2.0f * PI;
+              auto fighter = iter.world().entity();
+              fighter.set([playerPos,player,angle,dist](Position& p, Velocity& v, sTriangle& t, Follower &follow) {
+                  p = {
+                    playerPos->x + cos(angle) * dist,
+                    playerPos->y + sin(angle) * dist
+                  };
+                  v = {0, 0};
+                  t.color = RED;
+                  t.size = 0.5f;
+
+                  follow.follow = player;
+                  });
+              }
+
+              wave.time = wave.nextCooldown;
+              wave.nextCooldown *= 0.9f;
+              wave.numFighters++;
+            });
+          }
+          iter.entity(i).set<FighterWave>(wave);
+
+        }
+    });
+
 
 
   auto entity1 = ecs.entity()
@@ -294,6 +368,15 @@ void init_ecs(Camera2D *camera)
     shooter.lifetime = 0.3f;
   });
 
+  auto wave = ecs.entity();
+  wave.set([player](FighterWave &f) {
+    f.numFighters = 4;
+    f.time = 5.0f;
+    f.nextCooldown = 4.8f;
+    f.player = player;
+  });
+
+  /*
   int num = 5;
   float dist = 100.0f;
   for (int i = 0; i < num; i++) {
@@ -306,6 +389,27 @@ void init_ecs(Camera2D *camera)
       t.size = 0.5f;
 
       follow.follow = player;
+    });
+  }
+  */
+
+  // chmmrs
+  int numChmmr = 16;
+  float distChmmr = 100.0f;
+  for (int i = 0; i < numChmmr; i++) {
+    float angle = (float)i / (float)numChmmr * 2.0f * PI;
+    auto chmmr = ecs.entity();
+    chmmr.set([player,angle,distChmmr](Position& p, sCircle &c, Chmmr &chmmr) {
+      p = {600 + cos(angle) * distChmmr, sin(angle) * distChmmr+100};
+      c.color = RED;
+
+      c.size = 20.0f;
+      chmmr.size = 20.0f;
+
+      chmmr.parent = player;
+      chmmr.radius = distChmmr;
+      chmmr.angle = angle;
+      chmmr.rotateSpeed = 3.14f;
     });
   }
 

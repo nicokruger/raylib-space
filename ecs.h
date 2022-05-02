@@ -40,8 +40,10 @@ struct Chmmr {
   float radius;
   float rotateSpeed;
   float hp;
+  float angle;
+  float size;
   flecs::entity parent;
-}
+};
 
 struct sRectangle {
   int color;
@@ -74,6 +76,14 @@ struct PhysicsBodyComponent {
 struct CameraFollow {
   float offsetX;
   float offsetY;
+};
+
+struct FighterWave {
+  float time;
+  float nextCooldown;
+  int numFighters;
+  float radius;
+  flecs::entity player;
 };
 
 void init_ecs(Camera2D *camera);

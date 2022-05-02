@@ -22,7 +22,7 @@
 #define MAIN
 #include "ecs.h"
 
-#define MAX_BUILDINGS   5
+#define MAX_BUILDINGS   500
 #define FORCE          4.0f
 #define MAX_FORCE     10.0f
 #define MAX_VEL     0.1f
