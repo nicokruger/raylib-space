@@ -33,6 +33,7 @@
 #define SHIP_WIDTH 20
 #define SHIP_LENGTH 40
 
+#define PLATFORM_DESKTOP 1
 #if defined(PLATFORM_DESKTOP)
     #define GLSL_VERSION            330
 #else   // PLATFORM_RPI, PLATFORM_ANDROID, PLATFORM_WEB
