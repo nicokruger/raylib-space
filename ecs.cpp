@@ -109,9 +109,13 @@ HudInfo *init_ecs(Camera2D *camera)
 
 
   ecs.system<const PhysicsBodyComponent, PlayerControl>()
-    .each([](const PhysicsBodyComponent &bodyComponent, PlayerControl &playerControl) {
+    .each([](flecs::entity player, const PhysicsBodyComponent &bodyComponent, PlayerControl &playerControl) {
         hudInfo.health = playerControl.health;
         hudInfo.maxHealth = playerControl.maxHealth;
+        hudInfo.score = playerControl.score;
+        hudInfo.maxScore = playerControl.maxScore;
+        hudInfo.level = playerControl.level;
+        hudInfo.scoreMultiplier = playerControl.scoreMultiplier;
 
         auto playerBody = bodyComponent.body;
         Vector2 p = playerBody->position;
@@ -168,6 +172,12 @@ HudInfo *init_ecs(Camera2D *camera)
               hudInfo.state = GUI_STATE_GAMEOVER;
             }
           }
+        }
+
+        if (hudInfo.doUpgrade) {
+          //(*hudInfo.toUpgrade)(player);
+          hudInfo.toUpgrade(player);
+          hudInfo.doUpgrade = false;
         }
 
 
@@ -276,9 +286,39 @@ HudInfo *init_ecs(Camera2D *camera)
                   me.set<sTriangle>(meTriangle);
                   me.modified<sTriangle>();
                   me.modified<Shot>();
-                  //std::cout << "hit" << std::endl;
-                  //iterr.entity(i).set<Dying>({0});
-                  //iterr.entity(i).add_if
+
+                  PlayerControl newPlayerControl = *playerEntity.get<PlayerControl>();
+                  newPlayerControl.score += 1 * (newPlayerControl.scoreMultiplier);
+                  if (newPlayerControl.score >= newPlayerControl.maxScore) {
+                    newPlayerControl.maxScore += 5;
+                    newPlayerControl.score = 0.0f;
+                    hudInfo.state = GUI_STATE_UPGRADE;
+
+                    hudInfo.upgrades[0].name = "SHOT CD";
+                    hudInfo.upgrades[0].execute = [](flecs::entity player) {
+                      std::cout << "upgrade SHOT CD" << std::endl;
+                      Shooter shooter = *playerEntity.get<Shooter>();
+                      //auto bullet = iter.world().entity();
+                      shooter.cooldown_max *= 0.5f;
+                      player.set<Shooter>(shooter);
+                    };
+
+                    hudInfo.upgrades[1].name = "SHOT SPD";
+                    hudInfo.upgrades[1].execute = [](flecs::entity player) {
+                      std::cout << "upgrade SHOT SPD" << std::endl;
+                      //auto bullet = iter.world().entity();
+                      //shooter.speed *= 0.5f;
+                      //player.set<Shooter>(shooter);
+
+                    };
+
+                    hudInfo.upgrades[2].name = "CHMMR SPD";
+                    hudInfo.upgrades[3].name = "CHMMR CNT";
+                  }
+                  iter.world().defer([iter,newPlayerControl]() {
+                    playerEntity.mut(iter).set<PlayerControl>(newPlayerControl);
+                  });
+
                 }
           }
         }
@@ -481,6 +521,12 @@ void setup_scene()
     playerControl.maxFore = 10.0f;
     playerControl.health = 5;
     playerControl.maxHealth = 5;
+
+    playerControl.score = 0.0f;
+    playerControl.maxScore = 1.0f;
+    playerControl.level = 1;
+    playerControl.scoreMultiplier = 1.0f;
+
     triangle.color = ORANGE;
     triangle.size = 1.0f;
     shooter.cooldown = 0.1f;
@@ -491,7 +537,7 @@ void setup_scene()
 
   auto wave = ecs.entity();
   wave.set([player](FighterWave &f) {
-    f.numFighters = 20;
+    f.numFighters = 4;
     f.time = 1.0f;
     f.nextCooldown = 7.0f;
     f.player = player;

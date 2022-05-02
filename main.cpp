@@ -10,6 +10,7 @@
 ********************************************************************************************/
 
 #include "raylib.h"
+#include <iostream>
 #include <stdio.h>
 
 #define PHYSAC_IMPLEMENTATION
@@ -21,6 +22,7 @@
 
 #define MAIN
 #include "ecs.h"
+#include "button.h"
 
 #define MAX_BUILDINGS   500
 #define FORCE          4.0f
@@ -133,13 +135,20 @@ int main(void)
               DrawRectangleLines( 10, 10, 250, 113, BLUE);
 
               char buf2[255];
-              snprintf(buf2, sizeof(buf2), "Health %.2f/%.2f", hudInfo->health, hudInfo->maxHealth);
+              snprintf(buf2, sizeof(buf2), "Health %.2f/%.2f\nProgress: %.2f/%.2f\nLevel: %i",
+                  hudInfo->health,
+                  hudInfo->maxHealth,
+                  hudInfo->score,
+                  hudInfo->maxScore,
+                  hudInfo->level
+                  );
 
-              DrawText(buf2, 20, 20, 10, BLACK);
-              DrawText("- Right/Left to move Offset", 40, 40, 10, DARKGRAY);
-              DrawText("- Mouse Wheel to Zoom in-out", 40, 60, 10, DARKGRAY);
-              DrawText("- A / S to Rotate", 40, 80, 10, DARKGRAY);
-              DrawText("- R to reset Zoom and Rotation", 40, 100, 10, DARKGRAY);
+
+              DrawText(buf2, 20, 20, 30, BLACK);
+              //DrawText("- Right/Left to move Offset", 40, 40, 10, DARKGRAY);
+              //DrawText("- Mouse Wheel to Zoom in-out", 40, 60, 10, DARKGRAY);
+              //DrawText("- A / S to Rotate", 40, 80, 10, DARKGRAY);
+              //DrawText("- R to reset Zoom and Rotation", 40, 100, 10, DARKGRAY);
 
               BeginMode2D(camera);
               /*
@@ -186,6 +195,33 @@ int main(void)
             reset_ecs();
             setup_scene();
           }
+
+        } else if (hudInfo->state == GUI_STATE_UPGRADE) {
+          int numButtons = 4;
+          Button buttons[] = {
+            {screenWidth-200,200,145,45,30, GRAY, LIGHTGRAY,DARKGRAY,hudInfo->upgrades[0].name.c_str(),1,true},
+            {screenWidth-200,300,145,45,30, GRAY, LIGHTGRAY,DARKGRAY,hudInfo->upgrades[1].name.c_str(),1,true},
+
+            {screenWidth-400,200,145,45,30, GRAY, LIGHTGRAY,DARKGRAY,hudInfo->upgrades[2].name.c_str(),1,true},
+            {screenWidth-400,300,145,45,30, GRAY, LIGHTGRAY,DARKGRAY,hudInfo->upgrades[3].name.c_str(),1,true},
+          };
+          BeginDrawing();
+          ClearBackground(RAYWHITE);
+          // TODO: Draw TITLE screen here!
+          DrawRectangle(0, 0, screenWidth, screenHeight, GREEN);
+          DrawText("UPGRADE!!", 20, 20, 40, DARKGREEN);
+          DrawText("CHOOSE YOUR UPGRADE", 120, 220, 20, DARKGREEN);
+
+          for (int i = 0; i < numButtons; i++) {
+            buttons[i].draw();
+            if (buttons[i].onButtonPress()) {
+              std::cout << "clicked it" << std::endl;
+              hudInfo->toUpgrade = hudInfo->upgrades[i].execute;
+              hudInfo->doUpgrade = true;
+              hudInfo->state = GUI_STATE_PLAYING;
+            }
+          }
+          EndDrawing();
 
         }
     }

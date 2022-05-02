@@ -6,7 +6,7 @@ find_package(raylib 3.0 REQUIRED) # Requires at least version 3.0
 
 set(CMAKE_C_STANDARD 11) # Requires C11 standard
 
-add_executable(${PROJECT_NAME} main.cpp ecs.cpp vendor/flecs/flecs.c)
+add_executable(${PROJECT_NAME} main.cpp ecs.cpp button.cpp vendor/flecs/flecs.c)
 
 target_link_libraries(${PROJECT_NAME} raylib m)
 target_include_directories(${PROJECT_NAME} PRIVATE vendor/flecs)

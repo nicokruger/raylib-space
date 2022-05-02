@@ -3,17 +3,36 @@
 #include "raylibextras/physac.h"
 #include "vendor/flecs/flecs.h"
 #include "raymath.h"
+#include <string>
 #endif
+
+#include <functional>
 
 #define GUI_STATE_PLAYING 0
 #define GUI_STATE_MENU 1
 #define GUI_STATE_GAMEOVER 2
 #define GUI_STATE_UPGRADE 3
 
+struct Upgrade {
+  std::string name;
+  std::string description;
+  std::function <void(flecs::entity player)> execute;
+};
+
 struct HudInfo {
   float health;
   float maxHealth;
   int state;
+
+  float score;
+  float maxScore;
+  float scoreMultiplier;
+  int level;
+
+  Upgrade upgrades[4];
+
+  bool doUpgrade;
+  std::function <void(flecs::entity player)> toUpgrade;
 };
 
 struct Position {
@@ -80,6 +99,10 @@ struct PlayerControl {
   float health;
   float maxHealth;
 
+  float score;
+  float maxScore;
+  float scoreMultiplier;
+  int level;
 };
 
 struct PhysicsBodyComponent {
