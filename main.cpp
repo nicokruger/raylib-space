@@ -70,7 +70,7 @@ int main(void)
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
 
-    init_ecs(&camera);
+    HudInfo *hudInfo = init_ecs(&camera);
 
     SetTargetFPS(60);                   // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
@@ -203,7 +203,10 @@ int main(void)
             DrawRectangle( 10, 10, 250, 113, Fade(SKYBLUE, 0.5f));
             DrawRectangleLines( 10, 10, 250, 113, BLUE);
 
-            DrawText("Free 2d camera controls:", 20, 20, 10, BLACK);
+            char buf2[255];
+            snprintf(buf2, sizeof(buf2), "Health %.2f/%.2f", hudInfo->health, hudInfo->maxHealth);
+
+            DrawText(buf2, 20, 20, 10, BLACK);
             DrawText("- Right/Left to move Offset", 40, 40, 10, DARKGRAY);
             DrawText("- Mouse Wheel to Zoom in-out", 40, 60, 10, DARKGRAY);
             DrawText("- A / S to Rotate", 40, 80, 10, DARKGRAY);

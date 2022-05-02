@@ -5,6 +5,11 @@
 #include "raymath.h"
 #endif
 
+struct HudInfo {
+  float health;
+  float maxHealth;
+};
+
 struct Position {
   float x, y;
   float rotation;
@@ -65,6 +70,10 @@ struct PlayerControl {
   float force;
   float maxVel;
   float turn;
+
+  float health;
+  float maxHealth;
+
 };
 
 struct PhysicsBodyComponent {
@@ -91,6 +100,6 @@ struct GravityWell {
   float size;
 };
 
-void init_ecs(Camera2D *camera);
+struct HudInfo *init_ecs(Camera2D *camera);
 
 void run_ecs();

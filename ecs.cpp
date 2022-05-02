@@ -6,8 +6,9 @@ flecs::world ecs;
 std::vector<flecs::entity> theFuckingList;
 std::vector<flecs::entity> theFuckingList2;
 flecs::entity playerEntity;
+HudInfo hudInfo;
 
-void init_ecs(Camera2D *camera)
+HudInfo *init_ecs(Camera2D *camera)
 {
   // lol shitty pre frame hack
   ecs.system<Position>()
@@ -106,8 +107,11 @@ void init_ecs(Camera2D *camera)
     });
 
 
-  ecs.system<const PhysicsBodyComponent, const PlayerControl>()
-    .each([](const PhysicsBodyComponent &bodyComponent, const PlayerControl &playerControl) {
+  ecs.system<const PhysicsBodyComponent, PlayerControl>()
+    .each([](const PhysicsBodyComponent &bodyComponent, PlayerControl &playerControl) {
+        hudInfo.health = playerControl.health;
+        hudInfo.maxHealth = playerControl.maxHealth;
+
         auto playerBody = bodyComponent.body;
         Vector2 p = playerBody->position;
         float orientation = playerBody->orient;
@@ -148,6 +152,19 @@ void init_ecs(Camera2D *camera)
           playerBody->orient += playerControl.turn;
           //PhysicsAddTorque(playerBody, 5000.0f);
         }
+
+        for (auto ent : theFuckingList2) {
+          auto position = ent.get<Position>();
+          float distance = Vector2Distance(playerBody->position, Vector2({position->x,position->y}));
+          if (distance < 30.0f) {
+            playerControl.health -= 1;
+            ent.destruct();
+            if (playerControl.health <= 0) {
+              playerControl.health = 0;
+            }
+          }
+        }
+
 
     });
 
@@ -424,10 +441,10 @@ void init_ecs(Camera2D *camera)
   planet1.set<GravityWell>({100,100});
   planet1.set<sCircle>({BLUE,100});
 
-  auto planet2 = ecs.entity();
-  planet2.set<Position>({400,400});
-  planet2.set<GravityWell>({100,100});
-  planet2.set<sCircle>({BLUE,100});
+  //auto planet2 = ecs.entity();
+  //planet2.set<Position>({400,400});
+  //planet2.set<GravityWell>({100,100});
+  //planet2.set<sCircle>({BLUE,100});
 
   auto player = ecs.entity();
   playerEntity = player;
@@ -440,6 +457,8 @@ void init_ecs(Camera2D *camera)
     playerControl.turn = 0.1f;
     playerControl.maxVel = 0.1f;
     playerControl.maxFore = 10.0f;
+    playerControl.health = 5;
+    playerControl.maxHealth = 5;
     triangle.color = ORANGE;
     triangle.size = 1.0f;
     shooter.cooldown = 0.1f;
@@ -450,9 +469,9 @@ void init_ecs(Camera2D *camera)
 
   auto wave = ecs.entity();
   wave.set([player](FighterWave &f) {
-    f.numFighters = 4;
+    f.numFighters = 2;
     f.time = 1.0f;
-    f.nextCooldown = 4.8f;
+    f.nextCooldown = 7.0f;
     f.player = player;
   });
 
@@ -493,7 +512,7 @@ void init_ecs(Camera2D *camera)
     });
   }
 
-
+  return &hudInfo;
 }
 
 void run_ecs()
