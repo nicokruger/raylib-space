@@ -16,6 +16,8 @@ struct Velocity {
 struct Shooter {
   float cooldown;
   float cooldown_max;
+  float speed;
+  float lifetime;
 };
 struct Shot {
   float x, y;
@@ -30,6 +32,7 @@ struct sRectangle {
 
 struct sTriangle {
   Color color;
+  float size;
 };
 
 struct PlayerControl {
@@ -42,6 +45,7 @@ struct PlayerControl {
 
 struct PhysicsBodyComponent {
   float density;
+  float size;
   PhysicsBody body;
 };
 

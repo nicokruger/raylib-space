@@ -5,10 +5,9 @@ flecs::world ecs;
 
 void init_ecs(Camera2D *camera)
 {
- ecs.system<Position, const Velocity>()
-    .each([](Position& p, const Velocity& v) {
-      p.x += v.x;
-      p.y += v.y;
+ ecs.system<PhysicsBodyComponent, const Velocity>()
+    .each([](PhysicsBodyComponent& p, const Velocity& v) {
+      p.body->force = (Vector2){v.x,v.y};
     });
   ecs.system<const sRectangle, const Position>()
     .each([](const sRectangle &r, const Position& p) {
@@ -20,7 +19,7 @@ void init_ecs(Camera2D *camera)
         const Position *posi = e.get<Position>();
         std::cout << "set physics: " << p.density << std::endl;
         std::cout << "pp " << pp.x << " " << pp.y << std::endl;
-        p.body = CreatePhysicsBodyRectangle((Vector2){ pp.x, pp.y }, 40, 40, p.density);
+        p.body = CreatePhysicsBodyRectangle((Vector2){ pp.x, pp.y }, 40 * p.size, 40 * p.size, p.density);
         p.body->useGravity = false;
     });
 
@@ -28,7 +27,6 @@ void init_ecs(Camera2D *camera)
     .each([](const PhysicsBodyComponent &pc, Position& p) {
         p.x = pc.body->position.x;
         p.y = pc.body->position.y;
-        std::cout << "update physics: " << p.x << " " << p.y << std::endl;
     });
 
   ecs.system<const PhysicsBodyComponent, const sTriangle>()
@@ -37,17 +35,17 @@ void init_ecs(Camera2D *camera)
       Vector2 v1, v2, v3;
       float playerAngle = body->orient;
       v1 = Vector2Rotate((Vector2){
-        40.0f,
+        40.0f * triangle.size,
         0.0f
       }, playerAngle);
       v2 = Vector2Rotate((Vector2){
-        - 40.0f,
-        - 40.0f,
+        - 40.0f * triangle.size,
+        - 40.0f * triangle.size,
         //0,0
       }, playerAngle);
       v3 = Vector2Rotate((Vector2){
-        -40.0f,
-        40.0f
+        -40.0f * triangle.size,
+        40.0f * triangle.size
         //500,500
       }, playerAngle);
       DrawTriangle(
@@ -112,6 +110,39 @@ void init_ecs(Camera2D *camera)
     .each([camera](const CameraFollow &cameraFollow, const PhysicsBodyComponent &physics) {
       camera->target = physics.body->position;
     });
+  ecs.system<Shooter, const PhysicsBodyComponent>()
+    .iter([](flecs::iter &iter, Shooter *shooter, const PhysicsBodyComponent *physicsBody) {
+        shooter->cooldown -= iter.delta_system_time();
+        if (shooter->cooldown < 0) {
+          std::cout << "shoot" << std::endl;
+          shooter->cooldown = shooter->cooldown_max + shooter->cooldown;
+
+          auto bullet = iter.world().entity();
+          bullet.set([physicsBody](Position& p) {
+            p.x = physicsBody->body->position.x;
+            p.y = physicsBody->body->position.y;
+          });
+
+          bullet.set([physicsBody,shooter](Velocity &velocity) {
+              Vector2 unit = {1,0};
+            Vector2 force = Vector2Rotate(unit, physicsBody->body->orient);
+            Vector2 maxVel = Vector2Scale(Vector2Normalize(force),shooter->speed);
+            velocity.x = maxVel.x;
+            velocity.y = maxVel.y;
+          });
+
+          bullet.set([](sTriangle& t) {
+              t.color = BLUE;
+              t.size = 0.2f;
+          });
+          bullet.set([physicsBody](Position &pos)  {
+              pos.x = physicsBody->body->position.x;
+              pos.x = physicsBody->body->position.x;
+          });
+
+        }
+        
+     });
 
 
 
@@ -145,15 +176,21 @@ void init_ecs(Camera2D *camera)
   });
 
   auto player = ecs.entity();
-  player.set([](Position& p, PhysicsBodyComponent& physics, PlayerControl &playerControl, sTriangle &triangle, CameraFollow &cameraFollow) {
+  player.set([](Position& p, PhysicsBodyComponent& physics, PlayerControl &playerControl, sTriangle &triangle, CameraFollow &cameraFollow, Shooter &shooter) {
     p = {200, 200};
     cameraFollow = {20,20};
     physics.density = 1.0f;
+    physics.size = 1.0f;
     playerControl.force = 4.0f;
     playerControl.turn = 0.1f;
     playerControl.maxVel = 0.1f;
     playerControl.maxFore = 10.0f;
     triangle.color = ORANGE;
+    triangle.size = 1.0f;
+    shooter.cooldown = 1.0f;
+    shooter.cooldown_max = 1.0f;
+    shooter.speed = 20.0f;
+    shooter.lifetime = 5.0f;
   });
 
 
