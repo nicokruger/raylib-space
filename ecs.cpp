@@ -201,6 +201,41 @@ HudInfo *init_ecs(Camera2D *camera)
           hudInfo.doUpgrade = false;
         }
 
+        if (playerControl.score >= playerControl.maxScore) {
+          playerControl.maxScore += 5;
+          playerControl.score = 0.0f;
+          hudInfo.state = GUI_STATE_UPGRADE;
+
+          hudInfo.upgrades[0].name = "SHOT CD";
+          hudInfo.upgrades[0].execute = [](flecs::entity player) {
+            std::cout << "upgrade SHOT CD" << std::endl;
+            Shooter shooter = *playerEntity.get<Shooter>();
+            //auto bullet = iter.world().entity();
+            shooter.cooldown_max *= 0.75f;
+            player.set<Shooter>(shooter);
+          };
+
+          hudInfo.upgrades[1].name = "SHOT SPD";
+          hudInfo.upgrades[1].execute = [](flecs::entity player) {
+            std::cout << "upgrade SHOT SPD" << std::endl;
+            Shooter shooter = *playerEntity.get<Shooter>();
+            //auto bullet = iter.world().entity();
+            shooter.speed *= 1.5f;
+            player.set<Shooter>(shooter);
+
+          };
+
+          hudInfo.upgrades[2].name = "CHMMR SPD";
+          hudInfo.upgrades[2].execute = [](flecs::entity player) {
+            player.set<UpgradeChmmr>({0});
+          };
+          hudInfo.upgrades[3].name = "CHMMR CNT";
+          hudInfo.upgrades[3].execute = [](flecs::entity player) {
+            player.set<UpgradeChmmr>({1});
+          };
+        }
+
+
 
     });
 
@@ -310,39 +345,6 @@ HudInfo *init_ecs(Camera2D *camera)
 
                   PlayerControl newPlayerControl = *playerEntity.get<PlayerControl>();
                   newPlayerControl.score += 1 * (newPlayerControl.scoreMultiplier);
-                  if (newPlayerControl.score >= newPlayerControl.maxScore) {
-                    newPlayerControl.maxScore += 5;
-                    newPlayerControl.score = 0.0f;
-                    hudInfo.state = GUI_STATE_UPGRADE;
-
-                    hudInfo.upgrades[0].name = "SHOT CD";
-                    hudInfo.upgrades[0].execute = [](flecs::entity player) {
-                      std::cout << "upgrade SHOT CD" << std::endl;
-                      Shooter shooter = *playerEntity.get<Shooter>();
-                      //auto bullet = iter.world().entity();
-                      shooter.cooldown_max *= 0.75f;
-                      player.set<Shooter>(shooter);
-                    };
-
-                    hudInfo.upgrades[1].name = "SHOT SPD";
-                    hudInfo.upgrades[1].execute = [](flecs::entity player) {
-                      std::cout << "upgrade SHOT SPD" << std::endl;
-                      Shooter shooter = *playerEntity.get<Shooter>();
-                      //auto bullet = iter.world().entity();
-                      shooter.speed *= 1.5f;
-                      player.set<Shooter>(shooter);
-
-                    };
-
-                    hudInfo.upgrades[2].name = "CHMMR SPD";
-                    hudInfo.upgrades[2].execute = [](flecs::entity player) {
-                      player.set<UpgradeChmmr>({0});
-                    };
-                    hudInfo.upgrades[3].name = "CHMMR CNT";
-                    hudInfo.upgrades[3].execute = [](flecs::entity player) {
-                      player.set<UpgradeChmmr>({1});
-                    };
-                  }
                   iter.world().defer([iter,newPlayerControl]() {
                     playerEntity.mut(iter).set<PlayerControl>(newPlayerControl);
                   });
