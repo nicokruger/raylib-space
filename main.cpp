@@ -137,6 +137,14 @@ int main(void)
           // Draw
           //----------------------------------------------------------------------------------
           BeginDrawing();
+              BeginShaderMode(shader);
+                //DrawTexture(texture, 0, 0, WHITE);
+                //DrawTexture(texture, texture.width, 0, WHITE);
+            float scrollingBack = -camera.target.x / 6.0f;
+            DrawTextureEx(texture, (Vector2){ scrollingBack, 20 }, 0.0f, 2.0f, WHITE);
+            DrawTextureEx(texture, (Vector2){ texture.width*2 + scrollingBack, 20 }, 0.0f, 2.0f, WHITE);
+              EndShaderMode();
+
 
               ClearBackground(RAYWHITE);
               seconds += GetFrameTime();
@@ -145,14 +153,7 @@ int main(void)
 
               BeginMode2D(camera);
 
-                  DrawRectangle(-6000, 320, 13000, 8000, DARKGRAY);
-              BeginShaderMode(shader);
-
-                DrawTexture(texture, 0, 0, WHITE);
-                DrawTexture(texture, texture.width, 0, WHITE);
-
-              EndShaderMode();
-
+                  //DrawRectangle(-6000, 320, 13000, 8000, DARKGRAY);
 
                   for (int i = 0; i < MAX_BUILDINGS; i++) DrawRectangleRec(buildings[i], buildColors[i]);
 

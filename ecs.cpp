@@ -541,8 +541,8 @@ HudInfo *init_ecs(Camera2D *camera)
 
 void setup_scene()
 {
-  int numPlanets = 100;
   /*
+  int numPlanets = 100;
   for (int i = 0; i < numPlanets; i++) {
     auto planet = ecs.entity();
     planet.set<Position>({
@@ -561,7 +561,7 @@ void setup_scene()
   }
   */
   int numCols = 10;
-  for (int i = 0; i < 6; i++) {
+  for (int i = 0; i < 12; i++) {
     auto planet = ecs.entity();
     //space evenly across
     float x = (float)i / (float)numCols * 5000.0f - 2500.0f;
