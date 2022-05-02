@@ -605,7 +605,7 @@ void setup_scene()
     auto chmmr = ecs.entity();
     chmmr.set([player,angle,distChmmr](Position& p, sCircle &c, Chmmr &chmmr) {
       p = {600 + cos(angle) * distChmmr, sin(angle) * distChmmr+100};
-      c.color = RED;
+      c.color = ORANGE;
 
       c.size = 20.0f;
       chmmr.size = 20.0f;

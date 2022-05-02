@@ -68,7 +68,7 @@ int main(void)
     camera.target = (Vector2){ player.x + 20.0f, player.y + 20.0f };
     camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
     camera.rotation = 0.0f;
-    camera.zoom = 1.0f;
+    camera.zoom = 0.8f;
 
     HudInfo *hudInfo = init_ecs(&camera);
 
