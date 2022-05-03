@@ -25,7 +25,7 @@
 #include "ecs.h"
 #include "button.h"
 
-#define MAX_BUILDINGS   100
+#define MAX_BUILDINGS   1
 #define FORCE          4.0f
 #define MAX_FORCE     10.0f
 #define MAX_VEL     0.1f
@@ -56,14 +56,14 @@ int main(void)
     Texture2D texture = LoadTexture("resources/space.png");
 
     // Load shader and setup location points and values
-    Shader shader = LoadShader(0, TextFormat("resources/shaders/glsl%i/wave.fs", GLSL_VERSION));
-    int secondsLoc = GetShaderLocation(shader, "secondes");
-    int freqXLoc = GetShaderLocation(shader, "freqX");
-    int freqYLoc = GetShaderLocation(shader, "freqY");
-    int ampXLoc = GetShaderLocation(shader, "ampX");
-    int ampYLoc = GetShaderLocation(shader, "ampY");
-    int speedXLoc = GetShaderLocation(shader, "speedX");
-    int speedYLoc = GetShaderLocation(shader, "speedY");
+    //Shader shader = LoadShader(0, TextFormat("resources/shaders/glsl%i/wave.fs", GLSL_VERSION));
+    //int secondsLoc = GetShaderLocation(shader, "secondes");
+    //int freqXLoc = GetShaderLocation(shader, "freqX");
+    //int freqYLoc = GetShaderLocation(shader, "freqY");
+    //int ampXLoc = GetShaderLocation(shader, "ampX");
+    //int ampYLoc = GetShaderLocation(shader, "ampY");
+    //int speedXLoc = GetShaderLocation(shader, "speedX");
+    //int speedYLoc = GetShaderLocation(shader, "speedY");
 
     // Shader uniform values that can be updated at any time
     float freqX = 25.0f;
@@ -74,6 +74,7 @@ int main(void)
     float speedY = 8.0f;
 
     float screenSize[2] = { (float)GetScreenWidth(), (float)GetScreenHeight() };
+    /*
     SetShaderValue(shader, GetShaderLocation(shader, "size"), &screenSize, SHADER_UNIFORM_VEC2);
     SetShaderValue(shader, freqXLoc, &freqX, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shader, freqYLoc, &freqY, SHADER_UNIFORM_FLOAT);
@@ -81,6 +82,7 @@ int main(void)
     SetShaderValue(shader, ampYLoc, &ampY, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shader, speedXLoc, &speedX, SHADER_UNIFORM_FLOAT);
     SetShaderValue(shader, speedYLoc, &speedY, SHADER_UNIFORM_FLOAT);
+    */
 
 
     Rectangle player = { 400, 280, 40, 40 };
@@ -139,19 +141,19 @@ int main(void)
           // Draw
           //----------------------------------------------------------------------------------
           BeginDrawing();
-              BeginShaderMode(shader);
+              //BeginShaderMode(shader);
                 //DrawTexture(texture, 0, 0, WHITE);
                 //DrawTexture(texture, texture.width, 0, WHITE);
             float scrollingBack = -camera.target.x / 6.0f;
-            DrawTextureEx(texture, (Vector2){ scrollingBack, 20 }, 0.0f, 2.0f, WHITE);
-            DrawTextureEx(texture, (Vector2){ texture.width*2 + scrollingBack, 20 }, 0.0f, 2.0f, WHITE);
-              EndShaderMode();
+            DrawTextureEx(texture, (Vector2){ scrollingBack, 0 }, 0.0f, 2.0f, WHITE);
+            DrawTextureEx(texture, (Vector2){ texture.width*2 + scrollingBack, 0 }, 0.0f, 2.0f, WHITE);
+              //EndShaderMode();
 
 
               ClearBackground(RAYWHITE);
               seconds += GetFrameTime();
 
-              SetShaderValue(shader, secondsLoc, &seconds, SHADER_UNIFORM_FLOAT);
+              //SetShaderValue(shader, secondsLoc, &seconds, SHADER_UNIFORM_FLOAT);
 
               BeginMode2D(camera);
 
@@ -280,7 +282,7 @@ int main(void)
     // De-Initialization
     //--------------------------------------------------------------------------------------
     //
-    UnloadShader(shader);         // Unload shader
+    //UnloadShader(shader);         // Unload shader
     UnloadTexture(texture);       // Unload texture
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
