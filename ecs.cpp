@@ -422,7 +422,7 @@ HudInfo *init_ecs(Camera2D *camera)
               }
 
               wave.time = wave.nextCooldown;
-              wave.nextCooldown *= 0.9f;
+              wave.nextCooldown = fmax(0.1f, wave.nextCooldown * 0.9f);
               wave.numFighters++;
             });
           }
