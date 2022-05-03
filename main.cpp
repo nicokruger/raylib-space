@@ -181,12 +181,13 @@ int main(void)
               DrawRectangleLines( 10, 10, 250, 113, BLUE);
 
               char buf2[255];
-              snprintf(buf2, sizeof(buf2), "Health %.2f/%.2f\nProgress: %.2f/%.2f\nLevel: %i",
+              snprintf(buf2, sizeof(buf2), "Health %.2f/%.2f\nProgress: %.2f/%.2f\nLevel: %i\nEnemies: %i",
                   hudInfo->health,
                   hudInfo->maxHealth,
                   hudInfo->score,
                   hudInfo->maxScore,
-                  hudInfo->level
+                  hudInfo->level,
+                  hudInfo->enemiesCount
                   );
 
 

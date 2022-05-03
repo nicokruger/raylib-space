@@ -504,6 +504,7 @@ HudInfo *init_ecs(Camera2D *camera)
   // hack post-frame
   ecs.system<PlayerControl>()
     .each([](PlayerControl &c) {
+        hudInfo.enemiesCount = theFuckingList2.size();
         theFuckingList.clear();
         theFuckingList2.clear();
       });

@@ -37,6 +37,8 @@ struct HudInfo {
 
   bool doUpgrade;
   std::function <void(flecs::entity player)> toUpgrade;
+
+  int enemiesCount;
 };
 
 struct Position {
