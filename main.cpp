@@ -180,8 +180,8 @@ int main(void)
               //DrawRectangle(screenWidth - 5, 5, 5, screenHeight - 10, RED);
               //DrawRectangle(0, screenHeight - 5, screenWidth, 5, RED);
 
-              DrawRectangle( 10, 10, 250, 113, Fade(SKYBLUE, 0.5f));
-              DrawRectangleLines( 10, 10, 250, 113, BLUE);
+              DrawRectangle( 10, 10, 250, 140, Fade(SKYBLUE, 0.5f));
+              DrawRectangleLines( 10, 10, 250, 140, BLUE);
 
               char buf2[255];
               snprintf(buf2, sizeof(buf2), "Health %.2f/%.2f\nProgress: %.2f/%.2f\nLevel: %i\nEnemies: %i",
@@ -194,7 +194,7 @@ int main(void)
                   );
 
 
-              DrawText(buf2, 20, 20, 30, BLACK);
+              DrawText(buf2, 20, 20, 20, WHITE);
               //DrawText("- Right/Left to move Offset", 40, 40, 10, DARKGRAY);
               //DrawText("- Mouse Wheel to Zoom in-out", 40, 60, 10, DARKGRAY);
               //DrawText("- A / S to Rotate", 40, 80, 10, DARKGRAY);
