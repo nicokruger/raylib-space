@@ -147,6 +147,7 @@ int main(void)
             float scrollingBack = -camera.target.x / 6.0f;
             DrawTextureEx(texture, (Vector2){ scrollingBack, 0 }, 0.0f, 2.0f, WHITE);
             DrawTextureEx(texture, (Vector2){ texture.width*2 + scrollingBack, 0 }, 0.0f, 2.0f, WHITE);
+            DrawTextureEx(texture, (Vector2){ -texture.width*2 + scrollingBack, 0 }, 0.0f, 2.0f, WHITE);
               //EndShaderMode();
 
 
@@ -172,12 +173,12 @@ int main(void)
               EndMode2D();
 
 
-              DrawText("SCREEN AREA", 640, 10, 20, RED);
+              //DrawText("SCREEN AREA", 640, 10, 20, RED);
 
-              DrawRectangle(0, 0, screenWidth, 5, RED);
-              DrawRectangle(0, 5, 5, screenHeight - 10, RED);
-              DrawRectangle(screenWidth - 5, 5, 5, screenHeight - 10, RED);
-              DrawRectangle(0, screenHeight - 5, screenWidth, 5, RED);
+              //DrawRectangle(0, 0, screenWidth, 5, RED);
+              //DrawRectangle(0, 5, 5, screenHeight - 10, RED);
+              //DrawRectangle(screenWidth - 5, 5, 5, screenHeight - 10, RED);
+              //DrawRectangle(0, screenHeight - 5, screenWidth, 5, RED);
 
               DrawRectangle( 10, 10, 250, 113, Fade(SKYBLUE, 0.5f));
               DrawRectangleLines( 10, 10, 250, 113, BLUE);
