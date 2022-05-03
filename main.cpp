@@ -14,6 +14,7 @@
 #include <stdio.h>
 
 #define PHYSAC_IMPLEMENTATION
+#define PHYSAC_AVOID_TIMMING_SYSTEM
 #include "raylibextras/physac.h"
 #include "raymath.h"
 

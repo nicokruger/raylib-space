@@ -672,7 +672,7 @@ void run_ecs()
   //ecs.frame_begin();
   //ecs.staging_begin();
   //ecs.defer_begin();
-  ecs.progress();
+  ecs.progress(16.0f / 1000.0f);
   //ecs.staging_end();
   //ecs.frame_end();
   //ecs.merge();
