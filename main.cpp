@@ -14,7 +14,7 @@
 #include <stdio.h>
 
 #define PHYSAC_IMPLEMENTATION
-#define PHYSAC_AVOID_TIMMING_SYSTEM
+//#define PHYSAC_AVOID_TIMMING_SYSTEM
 #include "raylibextras/physac.h"
 #include "raymath.h"
 
@@ -25,7 +25,7 @@
 #include "ecs.h"
 #include "button.h"
 
-#define MAX_BUILDINGS   1
+#define MAX_BUILDINGS   100
 #define FORCE          4.0f
 #define MAX_FORCE     10.0f
 #define MAX_VEL     0.1f
@@ -238,9 +238,11 @@ int main(void)
           if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE) || IsGestureDetected(GESTURE_TAP)) {
             hudInfo->state = GUI_STATE_PLAYING;
             hudInfo->health = hudInfo->maxHealth;
-            InitPhysics();
+            ResetPhysics();
+            //InitPhysics();
             reset_ecs();
             setup_scene();
+            PhysicsResetTime();
           }
 
         } else if (hudInfo->state == GUI_STATE_UPGRADE) {
@@ -266,6 +268,7 @@ int main(void)
               hudInfo->toUpgrade = hudInfo->upgrades[i].execute;
               hudInfo->doUpgrade = true;
               hudInfo->state = GUI_STATE_PLAYING;
+              PhysicsResetTime();
             }
           }
           EndDrawing();

@@ -301,6 +301,7 @@ static double deltaTime = 1.0/60.0/10.0 * 1000;             // Delta time in mil
 static double baseClockTicks = 0.0;                         // Offset clock ticks for MONOTONIC clock
 static unsigned long long int frequency = 0;                // Hi-res clock frequency
 static double startTime = 0.0;                              // Start time in milliseconds
+static double deltaTimeAccumulator = 0.0;
 static double currentTime = 0.0;                            // Current time in milliseconds
 #endif
 
@@ -914,12 +915,16 @@ void ClosePhysics(void)
     else TRACELOG("[PHYSAC] Physics module closed successfully\n");
 }
 
+void PhysicsResetTime(void)
+{
+  deltaTimeAccumulator = 0.0f;
+  startTime = GetCurrentTime();
+}
 // Update physics system
 // Physics steps are launched at a fixed time step if enabled
 void UpdatePhysics(void)
 {
 #if !defined(PHYSAC_AVOID_TIMMING_SYSTEM)
-    static double deltaTimeAccumulator = 0.0;
 
     // Calculate current time (ms)
     currentTime = GetCurrentTime();

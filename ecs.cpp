@@ -561,7 +561,7 @@ void setup_scene()
   }
   */
   int numCols = 10;
-  for (int i = 0; i < 12; i++) {
+  for (int i = 0; i < 10; i++) {
     auto planet = ecs.entity();
     //space evenly across
     float x = (float)i / (float)numCols * 5000.0f - 2500.0f;
@@ -587,7 +587,7 @@ void setup_scene()
   auto player = ecs.entity();
   playerEntity = player;
   player.set([](Position& p, PhysicsBodyComponent& physics, PlayerControl &playerControl, sTriangle &triangle, CameraFollow &cameraFollow, Shooter &shooter) {
-    p = {200, 200};
+    p = {400, 200};
     cameraFollow = {20,20};
     physics.density = 0.2f;
     physics.size = 1.0f;
@@ -672,7 +672,7 @@ void run_ecs()
   //ecs.frame_begin();
   //ecs.staging_begin();
   //ecs.defer_begin();
-  ecs.progress(16.0f / 1000.0f);
+  ecs.progress(16.6666f / 1000.0f);
   //ecs.staging_end();
   //ecs.frame_end();
   //ecs.merge();
