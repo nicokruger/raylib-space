@@ -438,6 +438,7 @@ HudInfo *init_ecs(Camera2D *camera)
     });
 
   // apply a force from the gravity well to the enemies
+  /*
   ecs.system<const Position,GravityWell>()
     .each([](flecs::entity entity, const Position &p, const GravityWell &gw) {
         for (auto ent : theFuckingList2) {
@@ -465,6 +466,7 @@ HudInfo *init_ecs(Camera2D *camera)
 
         }
     });
+    */
 
   // apply a force from the gravity well to the player
   ecs.system<const Position,GravityWell>()
